@@ -1,14 +1,11 @@
-// import type { Metadata } from "next";
-// import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { DM_Sans } from "next/font/google";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
+import LayoutContent from "./LayoutContent";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "700"], // choose the weights you need
+  weight: ["300", "400", "500", "700"],
   variable: "--font-dm-sans",
 });
 
@@ -21,9 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${dmSans.variable}`}>
       <body>
-        <Header />
-        {children}
-        <Footer />
+        <LayoutContent>{children}</LayoutContent>
       </body>
     </html>
   );

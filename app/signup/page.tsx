@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword2, setShowPassword2] = useState(false);
 
   const isPasswordValid = (password: string) => password.length >= 6;
 
@@ -153,25 +155,44 @@ export default function SignupPage() {
             required
           />
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className={inputBase}
-            required
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className={inputBase}
+              required
+            />
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Retype Password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            className={inputBase}
-            required
-          />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+
+          <div className="relative">
+            <input
+              type={showPassword2 ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Retype Password"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              className={inputBase}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword2((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
+            >
+              {showPassword2 ? "Hide" : "Show"}
+            </button>
+          </div>
 
           {form.confirmPassword.length > 0 && (
             <p

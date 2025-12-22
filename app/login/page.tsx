@@ -22,7 +22,7 @@ export default function LoginPage() {
     e.preventDefault();
     setStatus("loading");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -33,7 +33,19 @@ export default function LoginPage() {
       return;
     }
 
-    router.push(redirectTo);
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+
+    // Redirect based on role
+    if (profile?.role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push(redirectTo);
+    }
   };
 
   const inputBase =

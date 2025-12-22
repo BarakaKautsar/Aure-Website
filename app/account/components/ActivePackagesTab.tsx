@@ -32,14 +32,14 @@ export default function ActivePackagesTab() {
         .from("packages")
         .select(
           `
-    id,
-    total_credits,
-    remaining_credits,
-    expires_at,
-    package_type:package_type_id!inner (
-      name
-    )
-  `
+          id,
+          total_credits,
+          remaining_credits,
+          expires_at,
+          package_type:package_type_id!inner (
+            name
+          )
+        `
         )
         .eq("user_id", user.id)
         .eq("status", "active")
@@ -55,6 +55,14 @@ export default function ActivePackagesTab() {
     loadPackages();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-[#2F3E55]">Loading your packages...</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h2 className="text-3xl font-light text-[#2F3E55] mb-6">
@@ -63,7 +71,6 @@ export default function ActivePackagesTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {packages.map((pkg) => {
-          console.log(pkg.package_type.name);
           const used = pkg.total_credits - pkg.remaining_credits;
           const progress = (used / pkg.total_credits) * 100;
 
@@ -74,13 +81,14 @@ export default function ActivePackagesTab() {
 
           const isExpiringSoon = daysUntilExpiry <= 7;
           const isExpired = daysUntilExpiry < 0;
+          const isFullyUsed = pkg.remaining_credits === 0;
 
           return (
             <div
               key={pkg.id}
-              className={`bg-[#FBF8F2] border rounded-2xl p-6 ${
-                isExpired
-                  ? "border-red-400 opacity-50"
+              className={`bg-[#FBF8F2] border rounded-2xl p-6 transition ${
+                isExpired || isFullyUsed
+                  ? "border-gray-300 opacity-60 grayscale"
                   : isExpiringSoon
                   ? "border-yellow-400"
                   : "border-[#E5E7EB]"
@@ -90,13 +98,19 @@ export default function ActivePackagesTab() {
                 {pkg.package_type.name ?? "Package"}
               </h3>
 
+              {isFullyUsed && !isExpired && (
+                <p className="text-sm text-gray-600 mb-2 font-medium">
+                  All credits used
+                </p>
+              )}
+
               {isExpired && (
                 <p className="text-sm text-red-600 mb-2 font-medium">
                   Package expired
                 </p>
               )}
 
-              {!isExpired && isExpiringSoon && (
+              {!isExpired && !isFullyUsed && isExpiringSoon && (
                 <p className="text-sm text-yellow-600 mb-2 font-medium">
                   Expiring in {daysUntilExpiry} day{daysUntilExpiry > 1 && "s"}
                 </p>
@@ -116,7 +130,13 @@ export default function ActivePackagesTab() {
               <div className="mt-4">
                 <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#B7C9E5]"
+                    className={`h-full transition-all ${
+                      isFullyUsed
+                        ? "bg-gray-400"
+                        : isExpired
+                        ? "bg-red-400"
+                        : "bg-[#B7C9E5]"
+                    }`}
                     style={{ width: `${progress}%` }}
                   />
                 </div>
