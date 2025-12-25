@@ -13,6 +13,7 @@ import {
   FiLogOut,
   FiMenu,
   FiX,
+  FiUserCheck,
 } from "react-icons/fi";
 
 export default function AdminLayout({
@@ -62,6 +63,7 @@ export default function AdminLayout({
 
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: FiHome },
+    { name: "Customers", href: "/admin/customers", icon: FiUserCheck },
     { name: "Class Schedule", href: "/admin/classes", icon: FiCalendar },
     { name: "Bookings", href: "/admin/bookings", icon: FiUsers },
     { name: "Walk-in Booking", href: "/admin/walk-in", icon: FiPackage },

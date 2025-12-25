@@ -9,13 +9,27 @@ export default function AboutSection() {
           <h2 className="leading-tight text-[#2E3A4A] mb-8">About Us</h2>
 
           <p className="text-[#2E3A4A] leading-relaxed max-w-xl">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
+            At Aure Pilates, we believe in the power of flow, where movement
+            feels natural, breath guides the body, and strength is built with
+            ease. Our studio is a space designed for connection: between body
+            and mind, effort and release, movement and stillness.
+            <br />
+            <br />
+            Our Pilates approach emphasizes fluid transitions, mindful control,
+            and rhythmic breath. Each session invites you to move with
+            awareness, allowing the body to flow freely while building balance,
+            stability, and grace.
+            <br />
+            <br />
+            Guided by experienced and attentive instructors, our classes are
+            thoughtfully designed to support your unique journey, whether you
+            are beginning your Pilates practice or refining it. We honor
+            progress that feels sustainable, intuitive, and aligned with your
+            body.
+            <br />
+            <br />
+            This is more than a workout—it's a practice, a community, and a
+            lifestyle
           </p>
         </div>
 

@@ -20,6 +20,7 @@ export default function SignupPage() {
   });
 
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const passwordsMatch =
     form.password.length > 0 &&
@@ -69,46 +70,65 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
+    setErrorMessage(null);
 
     if (!isPasswordValid(form.password)) {
+      setErrorMessage("Password must be at least 6 characters");
       setStatus("error");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
+      setErrorMessage("Passwords do not match");
       setStatus("error");
       return;
     }
 
-    // 1. Create auth user
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-    });
+    try {
+      // 1. Create auth user
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
 
-    if (error || !data.user) {
-      console.error(error);
+      if (error) {
+        setErrorMessage(error.message);
+        setStatus("error");
+        return;
+      }
+
+      if (!data.user) {
+        setErrorMessage("Failed to create user");
+        setStatus("error");
+        return;
+      }
+
+      // 2. Update profile with name, phone, AND email
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          full_name: form.name,
+          phone_number: form.phone,
+          email: form.email, // ✅ Now saving email to profiles table
+        })
+        .eq("id", data.user.id);
+
+      if (profileError) {
+        console.error("Profile update error:", profileError);
+        setErrorMessage(
+          "Account created but profile update failed. Please contact support."
+        );
+        setStatus("error");
+        return;
+      }
+
+      // 3. Redirect to login
+      router.push("/login");
+    } catch (error) {
+      console.error("Signup error:", error);
+      setErrorMessage("An unexpected error occurred. Please try again.");
       setStatus("error");
-      return;
     }
-
-    // 2. Update profile with name & phone
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({
-        full_name: form.name,
-        phone_number: form.phone,
-      })
-      .eq("id", data.user.id);
-
-    if (profileError) {
-      console.error(profileError);
-      setStatus("error");
-      return;
-    }
-
-    // 3. Redirect to login
-    router.push("/login");
   };
 
   return (
@@ -155,43 +175,53 @@ export default function SignupPage() {
             required
           />
 
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              className={inputBase}
-              required
-            />
+          <div>
+            <label className="block text-sm mb-1 text-[#2F3E55]">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Enter password"
+                value={form.password}
+                onChange={handleChange}
+                className={inputBase + " pr-12"}
+                required
+              />
 
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
-          <div className="relative">
-            <input
-              type={showPassword2 ? "text" : "password"}
-              name="confirmPassword"
-              placeholder="Retype Password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              className={inputBase}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword2((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
-            >
-              {showPassword2 ? "Hide" : "Show"}
-            </button>
+          <div>
+            <label className="block text-sm mb-1 text-[#2F3E55]">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword2 ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="Retype password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className={inputBase + " pr-12"}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword2((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
+              >
+                {showPassword2 ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           {form.confirmPassword.length > 0 && (
@@ -204,10 +234,8 @@ export default function SignupPage() {
             </p>
           )}
 
-          {status === "error" && (
-            <p className="text-sm text-red-500">
-              Password must be at least 6 characters and match confirmation
-            </p>
+          {errorMessage && (
+            <p className="text-sm text-red-500">{errorMessage}</p>
           )}
 
           <button

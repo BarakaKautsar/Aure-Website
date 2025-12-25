@@ -10,7 +10,7 @@ const inputBase =
 
 const LOCATIONS = [
   "Aure Pilates Studio Tasikmalaya",
-  "Aure Pilates Studio Bandung",
+  "Aure Pilates Studio KBP",
 ];
 
 type ClassFromDB = {

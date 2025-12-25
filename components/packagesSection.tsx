@@ -83,6 +83,12 @@ export default function PackagesSection() {
         category: "matt",
         options: [],
       },
+      aerial: {
+        title: "Aerial Package",
+        image: "/images/Classes/Aerial.png",
+        category: "aerial",
+        options: [],
+      },
     };
 
     data.forEach((pkg) => {
