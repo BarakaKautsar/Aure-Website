@@ -21,8 +21,9 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
+    setErrorMessage(null);
 
-    const { error, data } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -33,19 +34,27 @@ export default function LoginPage() {
       return;
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
+    router.push(redirectTo);
+  };
 
-    // Redirect based on role
-    if (profile?.role === "admin") {
-      router.push("/admin");
-    } else {
-      router.push(redirectTo);
+  const handleGoogleSignIn = async () => {
+    setStatus("loading");
+    setErrorMessage(null);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${
+          window.location.origin
+        }/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setStatus("error");
     }
+    // If successful, user will be redirected to Google
   };
 
   const inputBase =
@@ -120,10 +129,6 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* {status === "error" && (
-            <p className="text-sm text-red-500">Invalid email or password</p>
-          )} */}
-
           {errorMessage && (
             <p className="text-sm text-red-500">{errorMessage}</p>
           )}
@@ -138,7 +143,7 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-sm text-[#2F3E55] mt-6">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <Link href="/signup" className="underline">
             Sign up
           </Link>
@@ -150,7 +155,11 @@ export default function LoginPage() {
           <div className="h-px bg-gray-200 flex-1" />
         </div>
 
-        <button className="w-full border rounded-xl py-3 flex items-center justify-center gap-3 hover:bg-gray-50">
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={status === "loading"}
+          className="w-full border rounded-xl py-3 flex items-center justify-center gap-3 hover:bg-gray-50 disabled:opacity-60 transition"
+        >
           <FcGoogle size={20} />
           Continue with Google
         </button>

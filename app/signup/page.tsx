@@ -1,13 +1,13 @@
 "use client";
+
 import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { FcGoogle } from "react-icons/fc";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showPassword2, setShowPassword2] = useState(false);
 
   const isPasswordValid = (password: string) => password.length >= 6;
 
@@ -20,7 +20,6 @@ export default function SignupPage() {
   });
 
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const passwordsMatch =
     form.password.length > 0 &&
@@ -70,65 +69,70 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
-    setErrorMessage(null);
 
     if (!isPasswordValid(form.password)) {
-      setErrorMessage("Password must be at least 6 characters");
       setStatus("error");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setErrorMessage("Passwords do not match");
       setStatus("error");
       return;
     }
 
-    try {
-      // 1. Create auth user
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-      });
-
-      if (error) {
-        setErrorMessage(error.message);
-        setStatus("error");
-        return;
-      }
-
-      if (!data.user) {
-        setErrorMessage("Failed to create user");
-        setStatus("error");
-        return;
-      }
-
-      // 2. Update profile with name, phone, AND email
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
+    // 1. Create auth user
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: {
           full_name: form.name,
           phone_number: form.phone,
-          email: form.email, // ✅ Now saving email to profiles table
-        })
-        .eq("id", data.user.id);
+        },
+      },
+    });
 
-      if (profileError) {
-        console.error("Profile update error:", profileError);
-        setErrorMessage(
-          "Account created but profile update failed. Please contact support."
-        );
-        setStatus("error");
-        return;
-      }
+    if (error || !data.user) {
+      console.error(error);
+      setStatus("error");
+      return;
+    }
 
-      // 3. Redirect to login
-      router.push("/login");
-    } catch (error) {
-      console.error("Signup error:", error);
-      setErrorMessage("An unexpected error occurred. Please try again.");
+    // 2. Update profile with name & phone
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        full_name: form.name,
+        phone_number: form.phone,
+        email: form.email,
+      })
+      .eq("id", data.user.id);
+
+    if (profileError) {
+      console.error(profileError);
+      setStatus("error");
+      return;
+    }
+
+    // 3. Redirect to login
+    router.push("/login");
+  };
+
+  const handleGoogleSignUp = async () => {
+    setStatus("loading");
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?redirect=/`,
+      },
+    });
+
+    if (error) {
+      console.error(error);
       setStatus("error");
     }
+    // If successful, user will be redirected to Google
   };
 
   return (
@@ -145,6 +149,22 @@ export default function SignupPage() {
         <h1 className="text-4xl font-light text-center text-[#2F3E55] mb-8">
           Sign Up
         </h1>
+
+        {/* Google Sign Up Button - First */}
+        <button
+          onClick={handleGoogleSignUp}
+          disabled={status === "loading"}
+          className="w-full border rounded-xl py-3 flex items-center justify-center gap-3 hover:bg-gray-50 disabled:opacity-60 transition mb-6"
+        >
+          <FcGoogle size={20} />
+          Continue with Google
+        </button>
+
+        <div className="flex items-center gap-4 mb-6">
+          <div className="h-px bg-gray-200 flex-1" />
+          <span className="text-sm text-gray-400">or</span>
+          <div className="h-px bg-gray-200 flex-1" />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <input
@@ -175,54 +195,25 @@ export default function SignupPage() {
             required
           />
 
-          <div>
-            <label className="block text-sm mb-1 text-[#2F3E55]">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Enter password"
-                value={form.password}
-                onChange={handleChange}
-                className={inputBase + " pr-12"}
-                required
-              />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            className={inputBase}
+            required
+          />
 
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1 text-[#2F3E55]">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword2 ? "text" : "password"}
-                name="confirmPassword"
-                placeholder="Retype password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                className={inputBase + " pr-12"}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword2((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
-              >
-                {showPassword2 ? "Hide" : "Show"}
-              </button>
-            </div>
-          </div>
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Retype Password"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            className={inputBase}
+            required
+          />
 
           {form.confirmPassword.length > 0 && (
             <p
@@ -234,8 +225,10 @@ export default function SignupPage() {
             </p>
           )}
 
-          {errorMessage && (
-            <p className="text-sm text-red-500">{errorMessage}</p>
+          {status === "error" && (
+            <p className="text-sm text-red-500">
+              Password must be at least 6 characters and match confirmation
+            </p>
           )}
 
           <button

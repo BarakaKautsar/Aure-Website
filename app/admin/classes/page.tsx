@@ -572,9 +572,9 @@ function ClassFormModal({
     setSaving(true);
 
     try {
-      // Combine date and time into ISO strings
-      const start_time = `${classDate}T${startTime}:00`;
-      const end_time = `${classDate}T${endTime}:00`;
+      // Combine date and time into ISO strings with Indonesia timezone (UTC+7)
+      const start_time = `${classDate}T${startTime}:00+07:00`;
+      const end_time = `${classDate}T${endTime}:00+07:00`;
 
       // Validate end time is after start time
       if (new Date(end_time) <= new Date(start_time)) {

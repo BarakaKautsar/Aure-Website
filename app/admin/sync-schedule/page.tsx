@@ -58,21 +58,32 @@ export default function SyncSchedulePage() {
       const response = await fetch("/api/admin/sync-google-sheets");
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMsg =
-          errorData.error ||
-          errorData.details ||
-          "Failed to sync from Google Sheets";
-        console.error("Sync error:", errorData);
-        alert(`Sync failed: ${errorMsg}`);
-        throw new Error(errorMsg);
+        const errorText = await response.text();
+
+        try {
+          const errorData = JSON.parse(errorText);
+          const errorMsg =
+            errorData.error ||
+            errorData.details ||
+            "Failed to sync from Google Sheets";
+          alert(`Sync failed: ${errorMsg}\n\nCheck console for details.`);
+        } catch (e) {
+          alert(
+            `Sync failed with status ${response.status}\n\nResponse: ${errorText}`
+          );
+        }
+        return;
       }
 
       const result = await response.json();
       setSyncResult(result);
     } catch (error) {
       console.error("Sync error:", error);
-      alert("Failed to sync from Google Sheets. Check console for details.");
+      alert(
+        `Failed to sync: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }. Check browser console for details.`
+      );
     } finally {
       setSyncing(false);
     }
@@ -89,8 +100,8 @@ export default function SyncSchedulePage() {
       // Insert classes in batches
       for (const classData of syncResult.classes) {
         const { error } = await supabase.from("classes").insert({
-          start_time: `${classData.date}T${classData.start_time}`,
-          end_time: `${classData.date}T${classData.end_time}`,
+          start_time: `${classData.date}T${classData.start_time}+07:00`, // Indonesia timezone (UTC+7)
+          end_time: `${classData.date}T${classData.end_time}+07:00`, // Indonesia timezone (UTC+7)
           title: classData.title,
           class_type: classData.class_type,
           coach_id: classData.coach_id,
@@ -279,7 +290,7 @@ export default function SyncSchedulePage() {
           </div>
 
           {/* Debug Info */}
-          {/* {syncResult.debug && (
+          {syncResult.debug && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
               <h3 className="font-semibold text-gray-800 mb-3">
                 🐛 Debug Information
@@ -317,7 +328,7 @@ export default function SyncSchedulePage() {
                 </div>
               </div>
             </div>
-          )} */}
+          )}
 
           {/* Errors */}
           {syncResult.errors.length > 0 && (
