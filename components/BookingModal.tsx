@@ -165,6 +165,34 @@ export default function BookingModal({ classInfo, onClose, onSuccess }: Props) {
         console.log("Single payment booking created, payment pending");
       }
 
+      // ✅ Send booking confirmation email
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.email) {
+          await fetch("/api/send-email/booking-confirmation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: profile.email,
+              userName: profile.full_name || "Member",
+              className: classInfo.title,
+              date: classInfo.date,
+              time: classInfo.time,
+              coach: classInfo.coach,
+              location: classInfo.location,
+            }),
+          });
+        }
+      } catch (emailError) {
+        console.error("Failed to send booking confirmation email:", emailError);
+        // Don't block the booking if email fails
+      }
+
       onSuccess();
     } catch (error) {
       console.error("Booking error:", error);
@@ -359,8 +387,8 @@ export function BookingSuccessModal({ onClose }: { onClose: () => void }) {
         </h3>
 
         <p className="text-sm text-[#2F3E55] mb-6">
-          Your class has been successfully booked. Check your account to view
-          booking details.
+          Your class has been successfully booked. A confirmation email has been
+          sent to your email address.
         </p>
 
         <button

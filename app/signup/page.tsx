@@ -114,7 +114,22 @@ export default function SignupPage() {
       return;
     }
 
-    // 3. Redirect to login
+    // ✅ 3. Send welcome email
+    try {
+      await fetch("/api/send-email/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: form.email,
+          userName: form.name,
+        }),
+      });
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Don't block signup if email fails
+    }
+
+    // 4. Redirect to login
     router.push("/login");
   };
 

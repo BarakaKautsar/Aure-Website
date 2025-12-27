@@ -223,7 +223,39 @@ export default function ManageBookingTab() {
         }
       }
 
-      // 3. Process waitlist - auto-book first eligible user
+      // ✅ 3. Send cancellation confirmation email
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("email, full_name")
+            .eq("id", user.id)
+            .single();
+
+          if (profile?.email) {
+            await fetch("/api/send-email/cancellation-confirmation", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                to: profile.email,
+                userName: profile.full_name || "Member",
+                className: selectedBooking.className,
+                date: selectedBooking.date,
+                time: selectedBooking.time,
+              }),
+            });
+          }
+        }
+      } catch (emailError) {
+        console.error("Failed to send cancellation email:", emailError);
+        // Don't block cancellation if email fails
+      }
+
+      // 4. Process waitlist - auto-book first eligible user
       await processWaitlist(selectedBooking.id);
 
       // Remove from list
