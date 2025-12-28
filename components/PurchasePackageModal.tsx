@@ -40,57 +40,47 @@ export default function PurchasePackageModal({
         return;
       }
 
-      // Calculate expiry date
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + packageInfo.validity_days);
-
-      // Create package record with pending status
-      const { data: newPackage, error: packageError } = await supabase
-        .from("packages")
-        .insert({
-          user_id: user.id,
-          package_type_id: packageInfo.id,
-          total_credits: packageInfo.class_credits,
-          remaining_credits: packageInfo.class_credits,
-          expires_at: expiryDate.toISOString().split("T")[0],
-          status: "pending", // Will be activated after payment
-        })
-        .select()
+      // Get user profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", user.id)
         .single();
 
-      if (packageError) throw packageError;
-
-      // Create transaction record
-      const { error: transactionError } = await supabase
-        .from("transactions")
-        .insert({
-          user_id: user.id,
-          type: "package",
-          package_type_id: packageInfo.id,
-          amount: packageInfo.price,
-          payment_method: "xendit",
-          payment_status: "pending",
-        });
-
-      if (transactionError) {
-        console.error("Transaction record error:", transactionError);
+      if (!profile) {
+        alert("Profile not found");
+        setPurchasing(false);
+        return;
       }
 
-      // TODO: Redirect to Xendit payment page
-      // For now, just mark as active (manual payment)
-      console.log("Package purchase created, payment integration coming soon");
+      // ✅ Create payment invoice with Xendit
+      const response = await fetch("/api/payment/create-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          userEmail: profile.email,
+          userName: profile.full_name || "Member",
+          packageName: packageInfo.name,
+          amount: packageInfo.price,
+          packageTypeId: packageInfo.id,
+          type: "package",
+        }),
+      });
 
-      // Temporary: Auto-activate for testing
-      await supabase
-        .from("packages")
-        .update({ status: "active" })
-        .eq("id", newPackage.id);
+      const result = await response.json();
 
-      onSuccess();
+      if (!result.success) {
+        alert("Failed to create payment. Please try again.");
+        setPurchasing(false);
+        return;
+      }
+
+      // ✅ Redirect to Xendit payment page
+      window.location.href = result.invoiceUrl;
     } catch (error) {
       console.error("Purchase error:", error);
-      alert("Failed to purchase package. Please try again.");
-    } finally {
+      alert("Failed to process purchase. Please try again.");
       setPurchasing(false);
     }
   };

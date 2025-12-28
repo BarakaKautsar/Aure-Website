@@ -159,10 +159,47 @@ export default function BookingModal({ classInfo, onClose, onSuccess }: Props) {
         }
       }
 
-      // If single payment, note that payment integration is coming
+      // If single payment, redirect to Xendit
       if (paymentMethod === "single") {
-        // TODO: Redirect to Xendit payment
-        console.log("Single payment booking created, payment pending");
+        // Get user profile for payment
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.email) {
+          // Create payment invoice
+          const paymentResponse = await fetch("/api/payment/create-invoice", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user.id,
+              userEmail: profile.email,
+              userName: profile.full_name || "Member",
+              className: classInfo.title,
+              classDate: classInfo.date,
+              amount: classInfo.price,
+              classId: classInfo.id,
+              bookingId: newBooking.id,
+              type: "single_class",
+            }),
+          });
+
+          const paymentResult = await paymentResponse.json();
+
+          if (paymentResult.success) {
+            // Redirect to Xendit payment page
+            window.location.href = paymentResult.invoiceUrl;
+            return; // Stop here, don't show success modal
+          } else {
+            alert("Failed to create payment. Please try again.");
+            // Delete the pending booking
+            await supabase.from("bookings").delete().eq("id", newBooking.id);
+            setBooking(false);
+            return;
+          }
+        }
       }
 
       // ✅ Send booking confirmation email
