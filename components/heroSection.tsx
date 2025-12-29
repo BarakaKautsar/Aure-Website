@@ -10,7 +10,7 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans",
 });
 
-const images = ["/images/Hero1.jpg", "/images/Hero2.jpg", "/images/Hero3.jpg"];
+const images = ["/images/hero1.jpg", "/images/hero2.jpg", "/images/hero3.jpg"];
 
 export default function HeroSection() {
   const [index, setIndex] = useState(0);

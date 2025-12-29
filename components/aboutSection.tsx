@@ -36,7 +36,7 @@ export default function AboutSection() {
         {/* RIGHT — IMAGE */}
         <div className="flex-1 flex justify-end">
           <Image
-            src="/images/ABOUT.jpg"
+            src="/images/about.jpg"
             alt="About Aure Pilates"
             width={480}
             height={480}
