@@ -5,19 +5,19 @@ import { FaWhatsapp } from "react-icons/fa";
 const classes = [
   {
     title: "Reformer",
-    image: "/images/Classes/Reformer.JPG",
+    image: "/images/Classes/Reformer.jpg",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
   },
   {
     title: "Spine Corrector",
-    image: "/images/Classes/Spine.JPG",
+    image: "/images/Classes/Spine.jpg",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
   },
   {
     title: "Matt",
-    image: "/images/Classes/Matt.JPG",
+    image: "/images/Classes/Matt.jpg",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
   },
