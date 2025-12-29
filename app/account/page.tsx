@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AccountTabs from "./components/AccountTabs";
 import ProfileTab from "./components/ProfileTab";
@@ -7,7 +8,7 @@ import ManageBookingTab from "./components/ManageBookingTab";
 import BookingHistoryTab from "./components/BookingHistoryTab";
 import ActivePackagesTab from "./components/ActivePackagesTab";
 
-export default function AccountPage() {
+function AccountContent() {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || "profile";
 
@@ -25,6 +26,18 @@ export default function AccountPage() {
   };
 
   return (
+    <>
+      {/* Tabs */}
+      <AccountTabs activeTab={tab} />
+
+      {/* Content */}
+      <div className="mt-10">{renderTab()}</div>
+    </>
+  );
+}
+
+export default function AccountPage() {
+  return (
     <main className="bg-white min-h-screen">
       {/* Hero */}
       <div
@@ -37,11 +50,9 @@ export default function AccountPage() {
           My Aure Account
         </h1>
 
-        {/* Tabs */}
-        <AccountTabs activeTab={tab} />
-
-        {/* Content */}
-        <div className="mt-10">{renderTab()}</div>
+        <Suspense fallback={<div className="text-center">Loading...</div>}>
+          <AccountContent />
+        </Suspense>
       </div>
     </main>
   );
