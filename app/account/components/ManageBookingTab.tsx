@@ -172,7 +172,7 @@ export default function ManageBookingTab() {
     setLoading(false);
   };
 
-  const confirmCancel = async () => {
+  const confirmCancel = async (reason?: string) => {
     if (!selectedBooking) return;
 
     // Check if class is less than 1 hour away
@@ -196,7 +196,7 @@ export default function ManageBookingTab() {
         .from("bookings")
         .update({
           status: "cancelled",
-          cancelled_at: new Date().toISOString(),
+          cancellation_reason: reason || null,
         })
         .eq("id", selectedBooking.id);
 

@@ -30,13 +30,22 @@ export async function createPackageInvoice({
   packageTypeId: string;
 }) {
   try {
+    // Encode metadata in externalId (keep it short - 256 char limit!)
+    const metadata = {
+      t: "pkg",
+      u: userId,
+      p: packageTypeId,
+    };
+    const encoded = Buffer.from(JSON.stringify(metadata)).toString("base64");
+    const externalId = `${encoded}_${Date.now()}`;
+
     const invoice = await Invoice.createInvoice({
       data: {
-        externalId: `package-${userId}-${Date.now()}`,
+        externalId: externalId,
         amount: amount,
         payerEmail: userEmail,
         description: `Pembelian ${packageName} - Aure Pilates`,
-        invoiceDuration: 86400, // 24 hours in seconds
+        invoiceDuration: 86400,
         currency: "IDR",
         reminderTime: 1,
         successRedirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
@@ -55,12 +64,6 @@ export async function createPackageInvoice({
         customerNotificationPreference: {
           invoiceCreated: ["email"],
           invoicePaid: ["email"],
-        },
-        metadata: {
-          userId,
-          packageTypeId,
-          packageName,
-          type: "package_purchase",
         },
       },
     });
@@ -101,13 +104,23 @@ export async function createSingleClassInvoice({
   bookingId: string;
 }) {
   try {
+    // Encode metadata in externalId (keep it short - 256 char limit!)
+    const metadata = {
+      t: "cls",
+      u: userId,
+      c: classId,
+      b: bookingId,
+    };
+    const encoded = Buffer.from(JSON.stringify(metadata)).toString("base64");
+    const externalId = `${encoded.substring(0, 200)}_${Date.now()}`;
+
     const invoice = await Invoice.createInvoice({
       data: {
-        externalId: `class-${bookingId}-${Date.now()}`,
+        externalId: externalId,
         amount: amount,
         payerEmail: userEmail,
         description: `${className} - ${classDate}`,
-        invoiceDuration: 3600, // 1 hour in seconds
+        invoiceDuration: 3600,
         currency: "IDR",
         successRedirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?type=class`,
         failureRedirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/failed`,
@@ -125,14 +138,6 @@ export async function createSingleClassInvoice({
         customerNotificationPreference: {
           invoiceCreated: ["email"],
           invoicePaid: ["email"],
-        },
-        metadata: {
-          userId,
-          classId,
-          bookingId,
-          className,
-          classDate,
-          type: "single_class_payment",
         },
       },
     });
