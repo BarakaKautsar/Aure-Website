@@ -85,7 +85,7 @@ export default function PackagesSection() {
       },
       aerial: {
         title: "Aerial Package",
-        image: "/images/Classes/Aerial.png",
+        image: "/images/Classes/Aerial.jpeg",
         category: "aerial",
         options: [],
       },

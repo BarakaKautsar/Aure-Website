@@ -7,19 +7,19 @@ const classes = [
     title: "Reformer",
     image: "/images/Classes/Reformer.jpg",
     description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      "Using the reformer machine, this practice adds resistance and support to enhance strength, balance, and precision. Reformer Pilates allows for highly controlled, low-impact movement that challenges the body while protecting the joints.",
   },
   {
     title: "Spine Corrector",
     image: "/images/Classes/Spine.jpg",
     description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      "Designed to improve spinal mobility, posture, and core connection. Spine-focused sessions help release tension, support alignment, and encourage healthy, pain-free movement.",
   },
   {
     title: "Matt",
     image: "/images/Classes/Matt.jpg",
     description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      "Build strength from the inside out using your own body weight. Mat Pilates focuses on core stability, flexibility, and alignment—perfect for creating a strong foundation and improving everyday movement.",
   },
 ];
 
