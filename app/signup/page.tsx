@@ -20,6 +20,8 @@ export default function SignupPage() {
   });
 
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const passwordsMatch =
     form.password.length > 0 &&
@@ -210,25 +212,45 @@ export default function SignupPage() {
             required
           />
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className={inputBase}
-            required
-          />
+          {/* Password with Show/Hide */}
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className={inputBase + " pr-12"}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Retype Password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            className={inputBase}
-            required
-          />
+          {/* Confirm Password with Show/Hide */}
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Retype Password"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              className={inputBase + " pr-12"}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
+            >
+              {showConfirmPassword ? "Hide" : "Show"}
+            </button>
+          </div>
 
           {form.confirmPassword.length > 0 && (
             <p
