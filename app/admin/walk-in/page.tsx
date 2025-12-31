@@ -253,31 +253,31 @@ export default function WalkInBookingPage() {
 
   if (showSuccess) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-green-500 flex items-center justify-center text-white">
-            <FiCheck size={40} />
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 text-center">
+          <div className="mx-auto mb-4 w-16 h-16 md:w-20 md:h-20 rounded-full bg-green-500 flex items-center justify-center text-white">
+            <FiCheck size={32} className="md:w-10 md:h-10" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
             Booking Confirmed!
           </h2>
           <p className="text-gray-600 mb-2">
             <strong>{customer?.full_name}</strong> has been booked for:
           </p>
-          <p className="text-lg text-gray-800 mb-6">
+          <p className="text-base md:text-lg text-gray-800 mb-4">
             {selectedClass?.title} -{" "}
             {new Date(selectedClass?.start_time || "").toLocaleTimeString(
               "en-US",
               { hour: "2-digit", minute: "2-digit" }
             )}
           </p>
-          <p className="text-gray-600 mb-8">
+          <p className="text-gray-600 mb-6">
             Payment: <strong className="capitalize">{paymentMethod}</strong> -
             Rp.{selectedClass?.price.toLocaleString("id-ID")}
           </p>
           <button
             onClick={resetForm}
-            className="bg-[#2E3A4A] text-white px-8 py-3 rounded-lg hover:opacity-90 transition"
+            className="bg-[#2E3A4A] text-white px-6 md:px-8 py-3 rounded-lg hover:opacity-90 transition w-full md:w-auto"
           >
             Book Another Walk-in
           </button>
@@ -287,14 +287,16 @@ export default function WalkInBookingPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Walk-in Booking</h1>
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">
+        Walk-in Booking
+      </h1>
 
-      {/* Progress Steps */}
-      <div className="flex items-center justify-center mb-8">
-        <div className="flex items-center gap-4">
+      {/* Progress Steps - More Compact on Mobile */}
+      <div className="flex items-center justify-center mb-6">
+        <div className="flex items-center gap-2 md:gap-4">
           <div
-            className={`flex items-center justify-center w-10 h-10 rounded-full ${
+            className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full text-sm md:text-base ${
               step >= 1
                 ? "bg-[#2E3A4A] text-white"
                 : "bg-gray-300 text-gray-600"
@@ -302,7 +304,7 @@ export default function WalkInBookingPage() {
           >
             1
           </div>
-          <div className="w-16 h-1 bg-gray-300">
+          <div className="w-8 md:w-16 h-1 bg-gray-300">
             <div
               className={`h-full transition-all ${
                 step >= 2 ? "bg-[#2E3A4A] w-full" : "w-0"
@@ -310,7 +312,7 @@ export default function WalkInBookingPage() {
             />
           </div>
           <div
-            className={`flex items-center justify-center w-10 h-10 rounded-full ${
+            className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full text-sm md:text-base ${
               step >= 2
                 ? "bg-[#2E3A4A] text-white"
                 : "bg-gray-300 text-gray-600"
@@ -318,7 +320,7 @@ export default function WalkInBookingPage() {
           >
             2
           </div>
-          <div className="w-16 h-1 bg-gray-300">
+          <div className="w-8 md:w-16 h-1 bg-gray-300">
             <div
               className={`h-full transition-all ${
                 step >= 3 ? "bg-[#2E3A4A] w-full" : "w-0"
@@ -326,7 +328,7 @@ export default function WalkInBookingPage() {
             />
           </div>
           <div
-            className={`flex items-center justify-center w-10 h-10 rounded-full ${
+            className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full text-sm md:text-base ${
               step >= 3
                 ? "bg-[#2E3A4A] text-white"
                 : "bg-gray-300 text-gray-600"
@@ -337,11 +339,11 @@ export default function WalkInBookingPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-8">
+      <div className="bg-white rounded-lg shadow-lg p-4 md:p-8">
         {/* STEP 1: Customer Search/Create */}
         {step === 1 && (
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6">
               Step 1: Find or Create Customer
             </h2>
 
@@ -350,18 +352,18 @@ export default function WalkInBookingPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Customer Phone Number
                 </label>
-                <div className="flex gap-3">
+                <div className="flex flex-col md:flex-row gap-3">
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="08123456789 or +628123456789"
-                    className="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
+                    className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
                   />
                   <button
                     onClick={searchCustomer}
                     disabled={searching}
-                    className="bg-[#2E3A4A] text-white px-6 py-3 rounded-lg hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
+                    className="bg-[#2E3A4A] text-white px-6 py-3 rounded-lg hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
                   >
                     <FiSearch />
                     {searching ? "Searching..." : "Search"}
@@ -374,8 +376,8 @@ export default function WalkInBookingPage() {
               </div>
             ) : !customer ? (
               <div>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <p className="text-yellow-800">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+                  <p className="text-sm md:text-base text-yellow-800">
                     Customer not found. Please create a new customer profile.
                   </p>
                 </div>
@@ -392,7 +394,7 @@ export default function WalkInBookingPage() {
                       onChange={(e) =>
                         setNewCustomer({ ...newCustomer, name: e.target.value })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
                       placeholder="John Doe"
                     />
                   </div>
@@ -411,12 +413,12 @@ export default function WalkInBookingPage() {
                           phone: e.target.value,
                         })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
                       placeholder="08123456789"
                     />
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex flex-col md:flex-row gap-3 pt-4">
                     <button
                       onClick={() => {
                         setPhone("");
@@ -440,19 +442,19 @@ export default function WalkInBookingPage() {
 
             {customer && (
               <div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-                  <p className="text-green-800 font-medium mb-2">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
+                  <p className="text-green-800 font-medium mb-2 text-sm md:text-base">
                     ✓ Customer Found
                   </p>
-                  <p className="text-gray-800">
+                  <p className="text-gray-800 text-sm md:text-base">
                     <strong>Name:</strong> {customer.full_name}
                   </p>
-                  <p className="text-gray-800">
+                  <p className="text-gray-800 text-sm md:text-base">
                     <strong>Phone:</strong> {customer.phone_number}
                   </p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col md:flex-row gap-3">
                   <button
                     onClick={resetForm}
                     className="flex-1 border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition"
@@ -474,11 +476,11 @@ export default function WalkInBookingPage() {
         {/* STEP 2: Class Selection */}
         {step === 2 && (
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6">
               Step 2: Select Class
             </h2>
 
-            <div className="mb-6">
+            <div className="mb-4 md:mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Date
               </label>
@@ -486,20 +488,20 @@ export default function WalkInBookingPage() {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
+                className="w-full md:w-auto border border-gray-300 rounded-lg px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
               />
             </div>
 
             {loadingClasses ? (
-              <p className="text-center py-8 text-gray-600">
+              <p className="text-center py-8 text-gray-600 text-sm md:text-base">
                 Loading classes...
               </p>
             ) : classes.length === 0 ? (
-              <p className="text-center py-8 text-gray-500">
+              <p className="text-center py-8 text-gray-500 text-sm md:text-base">
                 No classes available for this date
               </p>
             ) : (
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 mb-4 md:mb-6">
                 {classes.map((cls) => {
                   const isFull = cls.booked >= cls.capacity;
                   const isSelected = selectedClass?.id === cls.id;
@@ -509,7 +511,7 @@ export default function WalkInBookingPage() {
                       key={cls.id}
                       onClick={() => !isFull && setSelectedClass(cls)}
                       disabled={isFull}
-                      className={`w-full text-left p-4 border-2 rounded-lg transition ${
+                      className={`w-full text-left p-3 md:p-4 border-2 rounded-lg transition ${
                         isSelected
                           ? "border-[#2E3A4A] bg-[#F7F4EF]"
                           : isFull
@@ -517,12 +519,12 @@ export default function WalkInBookingPage() {
                           : "border-gray-200 hover:border-[#B7C9E5]"
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-gray-800">
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800 text-sm md:text-base">
                             {cls.title}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-xs md:text-sm text-gray-600">
                             {new Date(cls.start_time).toLocaleTimeString(
                               "en-US",
                               {
@@ -532,16 +534,16 @@ export default function WalkInBookingPage() {
                             )}{" "}
                             - Coach: {cls.coach?.name || "TBA"}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-xs md:text-sm text-gray-600">
                             {cls.location}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-800">
+                        <div className="text-left md:text-right">
+                          <p className="font-bold text-gray-800 text-sm md:text-base">
                             Rp.{cls.price.toLocaleString("id-ID")}
                           </p>
                           <p
-                            className={`text-sm ${
+                            className={`text-xs md:text-sm ${
                               isFull ? "text-red-600" : "text-gray-600"
                             }`}
                           >
@@ -555,7 +557,7 @@ export default function WalkInBookingPage() {
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
               <button
                 onClick={() => setStep(1)}
                 className="flex-1 border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition"
@@ -576,15 +578,15 @@ export default function WalkInBookingPage() {
         {/* STEP 3: Payment */}
         {step === 3 && selectedClass && customer && (
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6">
               Step 3: Confirm Payment
             </h2>
 
-            <div className="bg-[#F7F4EF] rounded-lg p-6 mb-6">
-              <h3 className="font-semibold text-gray-800 mb-4">
+            <div className="bg-[#F7F4EF] rounded-lg p-4 md:p-6 mb-4 md:mb-6">
+              <h3 className="font-semibold text-gray-800 mb-3 md:mb-4 text-sm md:text-base">
                 Booking Summary
               </h3>
-              <div className="space-y-2 text-gray-700">
+              <div className="space-y-1 md:space-y-2 text-gray-700 text-xs md:text-sm">
                 <p>
                   <strong>Customer:</strong> {customer.full_name}
                 </p>
@@ -611,12 +613,12 @@ export default function WalkInBookingPage() {
               </div>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4 md:mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Payment Method
               </label>
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:border-[#B7C9E5] transition">
+                <label className="flex items-center gap-3 p-3 md:p-4 border-2 rounded-lg cursor-pointer hover:border-[#B7C9E5] transition">
                   <input
                     type="radio"
                     name="payment"
@@ -624,9 +626,9 @@ export default function WalkInBookingPage() {
                     checked={paymentMethod === "cash"}
                     onChange={() => setPaymentMethod("cash")}
                   />
-                  <span className="font-medium">Cash</span>
+                  <span className="font-medium text-sm md:text-base">Cash</span>
                 </label>
-                <label className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:border-[#B7C9E5] transition">
+                <label className="flex items-center gap-3 p-3 md:p-4 border-2 rounded-lg cursor-pointer hover:border-[#B7C9E5] transition">
                   <input
                     type="radio"
                     name="payment"
@@ -634,14 +636,14 @@ export default function WalkInBookingPage() {
                     checked={paymentMethod === "transfer"}
                     onChange={() => setPaymentMethod("transfer")}
                   />
-                  <span className="font-medium">
+                  <span className="font-medium text-sm md:text-base">
                     Bank Transfer / QR Payment
                   </span>
                 </label>
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
               <button
                 onClick={() => setStep(2)}
                 disabled={creating}
