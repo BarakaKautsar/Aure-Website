@@ -36,6 +36,22 @@ function LoginForm() {
     router.push(redirectTo);
   };
 
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${
+          window.location.origin
+        }/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setStatus("error");
+    }
+  };
+
   const inputBase =
     "w-full border border-[#D1D5DB] rounded-xl px-4 py-3 bg-white text-[#2F3E55] focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]";
 
@@ -121,7 +137,11 @@ function LoginForm() {
         <div className="h-px bg-gray-200 flex-1" />
       </div>
 
-      <button className="w-full border rounded-xl py-3 flex items-center justify-center gap-3 hover:bg-gray-50">
+      <button
+        onClick={handleGoogleLogin}
+        type="button"
+        className="w-full border rounded-xl py-3 flex items-center justify-center gap-3 hover:bg-gray-50 transition"
+      >
         <FcGoogle size={20} />
         Continue with Google
       </button>

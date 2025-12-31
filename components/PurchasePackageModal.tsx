@@ -145,8 +145,8 @@ export default function PurchasePackageModal({
             </p>
           </div>
         </div>
-
-        {/* Package Benefits */}
+        {/* 
+        {/* Package Benefits 
         <div className="bg-[#F7F4EF] rounded-xl p-4 mb-6">
           <p className="text-sm text-[#2F3E55] font-medium mb-2">
             ✓ Package Benefits:
@@ -157,7 +157,7 @@ export default function PurchasePackageModal({
             <li>• Easy booking with package credits</li>
             <li>• Credits automatically refunded for cancellations</li>
           </ul>
-        </div>
+        </div> */}
 
         {/* Payment Notice */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
