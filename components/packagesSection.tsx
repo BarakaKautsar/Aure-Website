@@ -140,39 +140,81 @@ export default function PackagesSection() {
           {packages.map((pkg) => (
             <div
               key={pkg.title}
-              className="bg-white shadow-md rounded-sm p-8 grid grid-cols-1 md:grid-cols-3 gap-8 items-center"
+              className="bg-white shadow-md rounded-lg overflow-hidden"
             >
-              {/* Image */}
-              <div className="md:col-span-1">
+              {/* Mobile: Vertical Stack */}
+              <div className="md:hidden">
+                {/* Image */}
                 <img
                   src={pkg.image}
                   alt={pkg.title}
-                  className="w-full h-64 object-cover rounded-lg"
+                  className="w-full h-48 object-cover"
                 />
+
+                {/* Content */}
+                <div className="p-6">
+                  <h3 className="text-2xl font-medium text-[#2E3A4A] mb-4">
+                    {pkg.title}
+                  </h3>
+
+                  <div className="space-y-3">
+                    {pkg.options.map((opt, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() =>
+                          handleGetPackage(opt, pkg.category, pkg.title)
+                        }
+                        className="w-full bg-[#B7C9E5] text-[#2E3A4A] rounded-lg px-4 py-3 hover:shadow-lg transition"
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-left">
+                            {opt.label}
+                          </span>
+                          <span className="text-lg font-semibold">
+                            {opt.price}
+                          </span>
+                          <span className="text-sm text-right">{opt.exp}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* Content */}
-              <div className="md:col-span-2">
-                <h3 className="text-3xl font-medium text-[#2E3A4A] mb-6">
-                  {pkg.title}
-                </h3>
+              {/* Desktop: Horizontal Layout */}
+              <div className="hidden md:grid md:grid-cols-3 gap-8 p-8 items-center">
+                {/* Image */}
+                <div className="md:col-span-1">
+                  <img
+                    src={pkg.image}
+                    alt={pkg.title}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
 
-                <div className="space-y-3 mb-6">
-                  {pkg.options.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() =>
-                        handleGetPackage(opt, pkg.category, pkg.title)
-                      }
-                      className="w-full grid grid-cols-3 bg-[#B7C9E5] text-[#2E3A4A] px-4 py-3 text-sm md:text-base hover:shadow-lg hover:-translate-y-0.5 transition cursor-pointer"
-                    >
-                      <span>{opt.label}</span>
-                      <span className="text-center font-medium">
-                        {opt.price}
-                      </span>
-                      <span className="text-right">{opt.exp}</span>
-                    </button>
-                  ))}
+                {/* Content */}
+                <div className="md:col-span-2">
+                  <h3 className="text-3xl font-medium text-[#2E3A4A] mb-6">
+                    {pkg.title}
+                  </h3>
+
+                  <div className="space-y-3">
+                    {pkg.options.map((opt, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() =>
+                          handleGetPackage(opt, pkg.category, pkg.title)
+                        }
+                        className="w-full grid grid-cols-3 bg-[#B7C9E5] text-[#2E3A4A] px-4 py-3 text-base hover:shadow-lg hover:-translate-y-0.5 transition cursor-pointer rounded-lg"
+                      >
+                        <span>{opt.label}</span>
+                        <span className="text-center font-medium">
+                          {opt.price}
+                        </span>
+                        <span className="text-right">{opt.exp}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
