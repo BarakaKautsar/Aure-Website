@@ -29,7 +29,7 @@ export default function AboutSection() {
             <br />
             <br />
             This is more than a workout—it's a practice, a community, and a
-            lifestyle
+            lifestyle.
           </p>
         </div>
 
