@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { DM_Sans } from "next/font/google";
 import LayoutContent from "./LayoutContent";
+import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={`${dmSans.variable}`}>
       <body>
         <LayoutContent>{children}</LayoutContent>
+        <FloatingWhatsAppButton /> {/* ← Add this */}
       </body>
     </html>
   );

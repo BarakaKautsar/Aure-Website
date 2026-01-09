@@ -15,24 +15,11 @@ const cabin = Cabin({
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
-
-      // Check if admin
-      if (data.user) {
-        supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", data.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            setIsAdmin(profile?.role === "admin");
-          });
-      }
     });
 
     // Listen for auth changes
@@ -40,20 +27,6 @@ export default function Header() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-
-      // Check admin status on auth change
-      if (session?.user) {
-        supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            setIsAdmin(profile?.role === "admin");
-          });
-      } else {
-        setIsAdmin(false);
-      }
     });
 
     return () => subscription.unsubscribe();
@@ -78,31 +51,21 @@ export default function Header() {
         {/* Desktop Navigation */}
         <div className="hidden gap-12 md:flex text-lg font-medium items-center">
           <Link href="/">Home</Link>
-          <Link href="/#schedule">Schedule</Link>
-          <Link href="/#classes">Class</Link>
-          <Link href="/#packages">Package</Link>
-          <Link href="/#coaches">Coaches</Link>
+          <Link href="/schedule">Schedules</Link>
+          <Link href="/packages">Packages</Link>
+          <Link href="/classes">Classes</Link>
+          <Link href="/coaches">Coaches</Link>
 
           <div className="h-10 w-px bg-[#F7F4EF]/40" />
 
-          {/* ✅ AUTH BUTTON */}
+          {/* Auth Button */}
           {user ? (
-            <>
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-2 rounded-full border-2 border-orange-400 bg-orange-500 text-white px-6 py-2 hover:bg-orange-600 transition font-semibold"
-                >
-                  Admin Panel
-                </Link>
-              )}
-              <Link
-                href="/account/"
-                className="flex items-center gap-2 rounded-full border border-[#F7F4EF] px-6 py-2 hover:bg-[#F7F4EF] hover:text-[#2E3A4A] transition"
-              >
-                My Account
-              </Link>
-            </>
+            <Link
+              href="/account/"
+              className="flex items-center gap-2 rounded-full border border-[#F7F4EF] px-6 py-2 hover:bg-[#F7F4EF] hover:text-[#2E3A4A] transition"
+            >
+              My Account
+            </Link>
           ) : (
             <Link
               href="/login"
@@ -142,40 +105,29 @@ export default function Header() {
           <Link href="/" onClick={() => setOpen(false)}>
             Home
           </Link>
-          <Link href="/#schedule" onClick={() => setOpen(false)}>
+          <Link href="/schedule" onClick={() => setOpen(false)}>
             Schedule
           </Link>
-          <Link href="/#classes" onClick={() => setOpen(false)}>
-            Class
+          <Link href="/packages" onClick={() => setOpen(false)}>
+            Packages
           </Link>
-          <Link href="/#packages" onClick={() => setOpen(false)}>
-            Package
+          <Link href="/classes" onClick={() => setOpen(false)}>
+            Classes
           </Link>
-          <Link href="/#coaches" onClick={() => setOpen(false)}>
+          <Link href="/coaches" onClick={() => setOpen(false)}>
             Coaches
           </Link>
 
           <div className="h-px w-full bg-[#F7F4EF]/30 my-2" />
 
           {user ? (
-            <>
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  onClick={() => setOpen(false)}
-                  className="rounded-full border-2 border-orange-400 bg-orange-500 text-white px-6 py-2 w-fit hover:bg-orange-600 transition font-semibold"
-                >
-                  Admin Panel
-                </Link>
-              )}
-              <Link
-                href="/account/"
-                onClick={() => setOpen(false)}
-                className="rounded-full border border-[#F7F4EF] px-6 py-2 w-fit hover:bg-[#F7F4EF] hover:text-[#2E3A4A] transition"
-              >
-                My Account
-              </Link>
-            </>
+            <Link
+              href="/account/"
+              onClick={() => setOpen(false)}
+              className="rounded-full border border-[#F7F4EF] px-6 py-2 w-fit hover:bg-[#F7F4EF] hover:text-[#2E3A4A] transition"
+            >
+              My Account
+            </Link>
           ) : (
             <Link
               href="/login"
