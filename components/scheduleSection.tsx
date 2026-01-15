@@ -39,6 +39,9 @@ type ScheduleItem = {
   originalPrice?: number;
   capacity: number;
   booked: number;
+  startTime: Date; // Add this for checking if class has started
+  endTime: Date;
+  hasStarted: boolean; // Flag for UI
 };
 
 export default function ScheduleSection() {
@@ -61,8 +64,6 @@ export default function ScheduleSection() {
 
   // Booking modal state
   const [selectedClass, setSelectedClass] = useState<ScheduleItem | null>(null);
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [showWaitlistSuccessModal, setShowWaitlistSuccessModal] =
     useState(false);
@@ -130,7 +131,7 @@ export default function ScheduleSection() {
       )
       .gte("start_time", startOfDay.toISOString())
       .lte("start_time", endOfDay.toISOString())
-      .in("status", ["scheduled", "delayed"])
+      .in("status", ["scheduled", "delayed", "completed"]) // Include completed to show them greyed out
       .order("start_time", { ascending: true });
 
     // Only filter by location if not "All Locations"
@@ -145,6 +146,8 @@ export default function ScheduleSection() {
       setLoading(false);
       return;
     }
+
+    const now = new Date();
 
     const transformed = (data as unknown as ClassFromDB[]).map((cls) => {
       const startTime = new Date(cls.start_time);
@@ -167,6 +170,9 @@ export default function ScheduleSection() {
           aerial: "Aerial",
         }[cls.class_type] || cls.class_type;
 
+      // Check if class has started (current time is past start time)
+      const hasStarted = now >= startTime || cls.status === "completed";
+
       return {
         id: cls.id,
         location: cls.location,
@@ -180,6 +186,9 @@ export default function ScheduleSection() {
         originalPrice: cls.original_price || undefined,
         capacity: cls.capacity,
         booked: booked,
+        startTime: startTime,
+        endTime: endTime,
+        hasStarted: hasStarted,
       };
     });
 
@@ -207,6 +216,11 @@ export default function ScheduleSection() {
   }, [scheduleData, filters]);
 
   const handleBookNow = (classItem: ScheduleItem, isFull: boolean) => {
+    // Prevent booking if class has started
+    if (classItem.hasStarted) {
+      return;
+    }
+
     if (!isLoggedIn) {
       router.push(`/login?redirect=${encodeURIComponent("/schedule")}`);
       return;
@@ -569,7 +583,7 @@ export default function ScheduleSection() {
         {/* Selected Date & Class Count */}
         <div className="mb-6">
           <h2 className="text-2xl font-medium text-[#2E3A4A]">
-            Today, {formattedDate}
+            Classes scheduled for {formattedDate}
           </h2>
           <p className="text-gray-600">{classCount} classes</p>
         </div>
@@ -588,55 +602,85 @@ export default function ScheduleSection() {
             {filteredSchedule.map((item) => {
               const isFull = item.booked >= item.capacity;
               const spotsLeft = item.capacity - item.booked;
+              const hasStarted = item.hasStarted;
 
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition"
+                  className={`bg-white rounded-2xl p-6 shadow-sm transition ${
+                    hasStarted
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:shadow-md"
+                  }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     {/* Left: Time & Duration */}
                     <div className="shrink-0">
-                      <p className="text-xl font-semibold text-[#2E3A4A]">
+                      <p
+                        className={`text-xl font-semibold ${
+                          hasStarted ? "text-gray-400" : "text-[#2E3A4A]"
+                        }`}
+                      >
                         {item.time}
                       </p>
-                      <p className="text-sm text-gray-500">50 mins</p>
+                      <p className="text-sm text-gray-500">
+                        {hasStarted ? "Class started" : "50 mins"}
+                      </p>
                     </div>
 
                     {/* Middle: Class Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-medium text-[#2E3A4A]">
+                        <h3
+                          className={`text-lg font-medium ${
+                            hasStarted ? "text-gray-400" : "text-[#2E3A4A]"
+                          }`}
+                        >
                           {item.className}
                         </h3>
-                        {item.originalPrice && (
+                        {item.originalPrice && !hasStarted && (
                           <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs rounded-full">
                             SALE
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 capitalize">
+                      <p
+                        className={`text-sm capitalize ${
+                          hasStarted ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         {item.coach}
                       </p>
                     </div>
 
                     {/* Middle-Right: Location */}
                     <div className="shrink-0">
-                      <p className="text-sm font-medium text-[#2E3A4A]">
+                      <p
+                        className={`text-sm font-medium ${
+                          hasStarted ? "text-gray-400" : "text-[#2E3A4A]"
+                        }`}
+                      >
                         {item.location.replace("Aure Pilates Studio ", "")}
                       </p>
-                      <p className="text-xs text-gray-500">{spotsLeft} left</p>
+                      <p
+                        className={`text-xs ${
+                          hasStarted ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {hasStarted ? "Completed" : `${spotsLeft} left`}
+                      </p>
                     </div>
 
-                    {/* Right: Capacity & Button */}
+                    {/* Right: Button */}
                     <div className="flex items-center gap-4 shrink-0">
-                      {/* <div className="text-right">
-                        <p className="text-sm font-medium text-[#2E3A4A]">
-                          {spotsLeft} left
-                        </p>
-                      </div> */}
-
-                      {isFull ? (
+                      {hasStarted ? (
+                        <button
+                          disabled
+                          className="px-6 py-3 bg-gray-300 text-gray-500 rounded-full font-medium cursor-not-allowed whitespace-nowrap"
+                        >
+                          Class Started
+                        </button>
+                      ) : isFull ? (
                         <button
                           onClick={() => handleBookNow(item, true)}
                           className="px-6 py-3 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition whitespace-nowrap"
