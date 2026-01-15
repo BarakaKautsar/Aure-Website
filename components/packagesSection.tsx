@@ -25,7 +25,7 @@ type PackageType = {
   location: string;
 };
 
-const LOCATIONS = ["All Locations", "Tasikmalaya", "Bandung"];
+const LOCATIONS = ["All Locations", "Tasikmalaya", "KBP"];
 const CLASS_TYPES = [
   "All Classes",
   "Reformer",
@@ -192,7 +192,7 @@ export default function PackagesSection() {
                           <h3 className="text-2xl font-semibold text-[#2E3A4A]">
                             {selectedLocation === "All Locations"
                               ? `Packages for ${location}`
-                              : "Packages"}
+                              : `Packages for ${location}`}
                           </h3>
                         </div>
                       </div>
