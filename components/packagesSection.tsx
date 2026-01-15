@@ -218,10 +218,10 @@ export default function PackagesSection() {
                               </div>
 
                               {/* Features List */}
-                              <div className="space-y-3 mb-6 flex-grow">
+                              <div className="space-y-3 mb-6 grow">
                                 <div className="flex items-center gap-3">
                                   <FiCheck
-                                    className="text-green-600 flex-shrink-0"
+                                    className="text-green-600 shrink-0"
                                     size={18}
                                   />
                                   <span className="text-[#2E3A4A] text-sm">
@@ -236,7 +236,7 @@ export default function PackagesSection() {
 
                                 <div className="flex items-center gap-3">
                                   <FiCheck
-                                    className="text-green-600 flex-shrink-0"
+                                    className="text-green-600 shrink-0"
                                     size={18}
                                   />
                                   <span className="text-[#2E3A4A] text-sm">
@@ -246,7 +246,7 @@ export default function PackagesSection() {
 
                                 <div className="flex items-center gap-3">
                                   <FiClock
-                                    className="text-[#2E3A4A] flex-shrink-0"
+                                    className="text-[#2E3A4A] shrink-0"
                                     size={18}
                                   />
                                   <span className="text-[#2E3A4A] text-sm">
@@ -258,7 +258,7 @@ export default function PackagesSection() {
 
                                 <div className="flex items-center gap-3">
                                   <FiMapPin
-                                    className="text-[#2E3A4A] flex-shrink-0"
+                                    className="text-[#2E3A4A] shrink-0"
                                     size={18}
                                   />
                                   <span className="text-[#2E3A4A] text-sm">
@@ -310,10 +310,10 @@ export default function PackagesSection() {
                               </div>
 
                               {/* Features List */}
-                              <div className="space-y-3 mb-6 flex-grow">
+                              <div className="space-y-3 mb-6 grow">
                                 <div className="flex items-center gap-3">
                                   <FiCheck
-                                    className="text-green-600 flex-shrink-0"
+                                    className="text-green-600 shrink-0"
                                     size={18}
                                   />
                                   <span className="text-[#2E3A4A] text-sm">
@@ -328,7 +328,7 @@ export default function PackagesSection() {
 
                                 <div className="flex items-center gap-3">
                                   <FiCheck
-                                    className="text-green-600 flex-shrink-0"
+                                    className="text-green-600 shrink-0"
                                     size={18}
                                   />
                                   <span className="text-[#2E3A4A] text-sm">
@@ -338,7 +338,7 @@ export default function PackagesSection() {
 
                                 <div className="flex items-center gap-3">
                                   <FiClock
-                                    className="text-[#2E3A4A] flex-shrink-0"
+                                    className="text-[#2E3A4A] shrink-0"
                                     size={18}
                                   />
                                   <span className="text-[#2E3A4A] text-sm">
@@ -350,7 +350,7 @@ export default function PackagesSection() {
 
                                 <div className="flex items-center gap-3">
                                   <FiMapPin
-                                    className="text-[#2E3A4A] flex-shrink-0"
+                                    className="text-[#2E3A4A] shrink-0"
                                     size={18}
                                   />
                                   <span className="text-[#2E3A4A] text-sm">

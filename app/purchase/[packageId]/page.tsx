@@ -170,10 +170,7 @@ export default function PurchasePage() {
               </h2>
               <div className="space-y-3 text-[#2E3A4A]">
                 <div className="flex items-center gap-3">
-                  <FiPackage
-                    className="text-[#2E3A4A] flex-shrink-0"
-                    size={18}
-                  />
+                  <FiPackage className="text-[#2E3A4A] shrink-0" size={18} />
                   <span className="text-sm">
                     <strong>{packageType.class_credits} credits</strong> for{" "}
                     <strong>{categoryDisplayMap[packageType.category]}</strong>{" "}
@@ -182,7 +179,7 @@ export default function PurchasePage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <FiClock className="text-[#2E3A4A] flex-shrink-0" size={18} />
+                  <FiClock className="text-[#2E3A4A] shrink-0" size={18} />
                   <span className="text-sm">
                     Valid for <strong>{packageType.validity_days} days</strong>{" "}
                     from purchase
@@ -190,17 +187,14 @@ export default function PurchasePage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <FiMapPin
-                    className="text-[#2E3A4A] flex-shrink-0"
-                    size={18}
-                  />
+                  <FiMapPin className="text-[#2E3A4A] shrink-0" size={18} />
                   <span className="text-sm">
                     <strong>{packageType.location}</strong> studio
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <FiCheck className="text-green-600 flex-shrink-0" size={18} />
+                  <FiCheck className="text-green-600 shrink-0" size={18} />
                   <span className="text-sm">One-time payment</span>
                 </div>
               </div>
@@ -222,28 +216,28 @@ export default function PurchasePage() {
               <ul className="space-y-2 text-sm text-[#2E3A4A]">
                 <li className="flex items-start gap-2">
                   <FiCheck
-                    className="text-green-600 flex-shrink-0 mt-0.5"
+                    className="text-green-600 shrink-0 mt-0.5"
                     size={16}
                   />
                   <span>Save money compared to single class bookings</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <FiCheck
-                    className="text-green-600 flex-shrink-0 mt-0.5"
+                    className="text-green-600 shrink-0 mt-0.5"
                     size={16}
                   />
                   <span>Flexible scheduling within validity period</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <FiCheck
-                    className="text-green-600 flex-shrink-0 mt-0.5"
+                    className="text-green-600 shrink-0 mt-0.5"
                     size={16}
                   />
                   <span>Easy booking with package credits</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <FiCheck
-                    className="text-green-600 flex-shrink-0 mt-0.5"
+                    className="text-green-600 shrink-0 mt-0.5"
                     size={16}
                   />
                   <span>Credits automatically refunded for cancellations</span>
