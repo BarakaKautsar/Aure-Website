@@ -3,14 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import {
-  FiSearch,
-  FiEye,
-  FiEdit2,
-  FiPackage,
-  FiCalendar,
-  FiDownload,
-} from "react-icons/fi";
+import { FiSearch, FiEye, FiPackage, FiDownload } from "react-icons/fi";
+import CustomerDetailsModal from "./components/CustomerDetailsModal";
 
 type Customer = {
   id: string;
@@ -262,21 +256,24 @@ export default function CustomersManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600">Loading customers...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#2E3A4A] border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-600">Loading customers...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Customers</h1>
-          <p className="text-gray-600 mt-1">Manage your studio members</p>
+          <h1 className="text-4xl font-bold text-gray-900">Customers</h1>
+          <p className="text-gray-600 mt-2">Manage your studio members</p>
         </div>
         <button
           onClick={exportToCSV}
-          className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
+          className="flex items-center gap-2 bg-linear-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all font-medium"
         >
           <FiDownload size={20} />
           Export to CSV
@@ -284,7 +281,7 @@ export default function CustomersManagement() {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
         <div className="relative">
           <FiSearch
             className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -295,67 +292,69 @@ export default function CustomersManagement() {
             placeholder="Search by name, email, or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
+            className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2E3A4A] focus:border-transparent transition-all"
           />
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 text-sm">Total Customers</p>
-          <p className="text-3xl font-bold text-gray-800 mt-2">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-linear-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
+          <p className="text-blue-100 text-sm font-medium">Total Customers</p>
+          <p className="text-4xl font-bold mt-2">
             {customers.filter((c) => c.role !== "admin").length}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 text-sm">Active Customers</p>
-          <p className="text-3xl font-bold text-gray-800 mt-2">
+        <div className="bg-linear-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-6 text-white">
+          <p className="text-green-100 text-sm font-medium">Active Customers</p>
+          <p className="text-4xl font-bold mt-2">
             {customers.filter((c) => c.active_packages > 0).length}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 text-sm">Total Bookings</p>
-          <p className="text-3xl font-bold text-gray-800 mt-2">
+        <div className="bg-linear-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+          <p className="text-purple-100 text-sm font-medium">Total Bookings</p>
+          <p className="text-4xl font-bold mt-2">
             {customers.reduce((sum, c) => sum + c.total_bookings, 0)}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 text-sm">Total Packages Sold</p>
-          <p className="text-3xl font-bold text-gray-800 mt-2">
+        <div className="bg-linear-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white">
+          <p className="text-orange-100 text-sm font-medium">
+            Total Packages Sold
+          </p>
+          <p className="text-4xl font-bold mt-2">
             {customers.reduce((sum, c) => sum + c.total_packages_purchased, 0)}
           </p>
         </div>
       </div>
 
       {/* Customers Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-linear-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
               <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Contact
                 </th>
-                <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-center px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Total Bookings
                 </th>
-                <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-center px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Completed
                 </th>
-                <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-center px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Active Packages
                 </th>
-                <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-center px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Total Packages
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Joined
                 </th>
-                <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-right px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -365,18 +364,21 @@ export default function CustomersManagement() {
                 if (customer.role === "admin") return null;
 
                 return (
-                  <tr key={customer.id} className="hover:bg-gray-50">
+                  <tr
+                    key={customer.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-[#B7C9E5] flex items-center justify-center text-[#2F3E55] font-semibold">
+                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#B7C9E5] to-[#a0b5d8] flex items-center justify-center text-[#2F3E55] font-bold text-lg shadow-sm">
                           {customer.full_name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="ml-3">
-                          <p className="font-medium text-gray-800">
+                        <div className="ml-4">
+                          <p className="font-semibold text-gray-900">
                             {customer.full_name}
                           </p>
                           {customer.role === "admin" && (
-                            <span className="inline-block px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
+                            <span className="inline-block px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full mt-1">
                               Admin
                             </span>
                           )}
@@ -384,33 +386,33 @@ export default function CustomersManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-800">{customer.email}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-900">{customer.email}</p>
+                      <p className="text-sm text-gray-500 mt-1">
                         {customer.phone_number || "—"}
                       </p>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="font-semibold text-gray-800">
+                      <span className="text-lg font-bold text-gray-900">
                         {customer.total_bookings}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="text-green-600 font-semibold">
+                      <span className="text-lg font-bold text-green-600">
                         {customer.completed_classes}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       {customer.active_packages > 0 ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                          <FiPackage size={14} />
+                        <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-bold">
+                          <FiPackage size={16} />
                           {customer.active_packages}
                         </span>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400 text-lg">—</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="text-gray-600 font-medium">
+                      <span className="text-lg font-bold text-gray-700">
                         {customer.total_packages_purchased}
                       </span>
                     </td>
@@ -427,10 +429,10 @@ export default function CustomersManagement() {
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => loadCustomerDetails(customer.id)}
-                        className="inline-flex items-center gap-2 text-[#2F3E55] hover:text-[#2E3A4A] font-medium text-sm"
+                        className="inline-flex items-center gap-2 bg-[#2E3A4A] text-white px-4 py-2 rounded-lg hover:bg-[#3d4f61] transition-colors font-medium"
                       >
                         <FiEye size={16} />
-                        View Details
+                        View
                       </button>
                     </td>
                   </tr>
@@ -440,10 +442,13 @@ export default function CustomersManagement() {
           </table>
 
           {filteredCustomers.filter((c) => c.role !== "admin").length === 0 && (
-            <div className="text-center py-12 text-gray-500">
-              {searchQuery
-                ? "No customers found matching your search"
-                : "No customers yet"}
+            <div className="text-center py-16 text-gray-500">
+              <FiSearch className="mx-auto text-gray-300 mb-4" size={48} />
+              <p className="text-lg">
+                {searchQuery
+                  ? "No customers found matching your search"
+                  : "No customers yet"}
+              </p>
             </div>
           )}
         </div>
@@ -460,242 +465,6 @@ export default function CustomersManagement() {
           onRefresh={loadCustomers}
         />
       )}
-    </div>
-  );
-}
-
-// Customer Details Modal Component
-function CustomerDetailsModal({
-  customer,
-  onClose,
-  onRefresh,
-}: {
-  customer: CustomerDetails;
-  onClose: () => void;
-  onRefresh: () => void;
-}) {
-  const [activeTab, setActiveTab] = useState<"bookings" | "packages">(
-    "bookings"
-  );
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-[#B7C9E5] flex items-center justify-center text-[#2F3E55] font-bold text-2xl">
-                {customer.full_name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {customer.full_name}
-                </h2>
-                <p className="text-gray-600">{customer.email}</p>
-                <p className="text-gray-600">
-                  {customer.phone_number || "No phone"}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Member since{" "}
-                  {new Date(customer.created_at).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab("bookings")}
-            className={`flex-1 px-6 py-3 font-medium transition ${
-              activeTab === "bookings"
-                ? "border-b-2 border-[#2F3E55] text-[#2F3E55]"
-                : "text-gray-600 hover:text-gray-800"
-            }`}
-          >
-            <FiCalendar className="inline mr-2" />
-            Bookings ({customer.bookings.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("packages")}
-            className={`flex-1 px-6 py-3 font-medium transition ${
-              activeTab === "packages"
-                ? "border-b-2 border-[#2F3E55] text-[#2F3E55]"
-                : "text-gray-600 hover:text-gray-800"
-            }`}
-          >
-            <FiPackage className="inline mr-2" />
-            Packages ({customer.packages.length})
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === "bookings" && (
-            <div className="space-y-3">
-              {customer.bookings.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  No bookings yet
-                </p>
-              ) : (
-                customer.bookings.map((booking: any) => (
-                  <div
-                    key={booking.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-gray-800">
-                          {booking.class?.title || "Class"}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {booking.class?.start_time
-                            ? new Date(booking.class.start_time).toLocaleString(
-                                "en-US",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
-                            : "Date TBA"}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1 capitalize">
-                          Payment: {booking.payment_method?.replace("_", " ")}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          booking.status === "confirmed"
-                            ? "bg-green-100 text-green-800"
-                            : booking.status === "completed"
-                            ? "bg-blue-100 text-blue-800"
-                            : booking.status === "cancelled"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {activeTab === "packages" && (
-            <div className="space-y-3">
-              {customer.packages.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  No packages purchased yet
-                </p>
-              ) : (
-                customer.packages.map((pkg: any) => {
-                  const isActive = pkg.status === "active";
-                  const isExpired = new Date(pkg.expires_at) < new Date();
-                  const usedCredits = pkg.total_credits - pkg.remaining_credits;
-
-                  return (
-                    <div
-                      key={pkg.id}
-                      className={`border rounded-lg p-4 ${
-                        isActive && !isExpired
-                          ? "border-green-300 bg-green-50"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <p className="font-medium text-gray-800">
-                            {pkg.package_type?.name || "Package"}
-                          </p>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Purchased{" "}
-                            {new Date(pkg.created_at).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              }
-                            )}
-                          </p>
-                        </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            isActive && !isExpired
-                              ? "bg-green-100 text-green-800"
-                              : isExpired
-                              ? "bg-red-100 text-red-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {isExpired
-                            ? "Expired"
-                            : pkg.status === "active"
-                            ? "Active"
-                            : pkg.status}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">
-                          Credits: {pkg.remaining_credits} / {pkg.total_credits}
-                        </span>
-                        <span className="text-gray-600">
-                          Expires:{" "}
-                          {new Date(pkg.expires_at).toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      {/* Progress bar */}
-                      <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full ${
-                            isActive && !isExpired
-                              ? "bg-green-500"
-                              : "bg-gray-400"
-                          }`}
-                          style={{
-                            width: `${
-                              (usedCredits / pkg.total_credits) * 100
-                            }%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t bg-gray-50">
-          <button
-            onClick={onClose}
-            className="w-full px-6 py-3 bg-[#2F3E55] text-white rounded-lg hover:opacity-90 transition"
-          >
-            Close
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

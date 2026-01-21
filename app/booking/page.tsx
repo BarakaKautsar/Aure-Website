@@ -210,7 +210,7 @@ function BookingPageContent() {
           user_id: user.id,
           class_id: classId,
           package_id: selectedPackage,
-          payment_method: "package",
+          payment_method: "package_credit",
           payment_status: "paid",
           status: "confirmed",
           attendee_name: attendee.name,

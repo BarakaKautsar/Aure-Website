@@ -1,3 +1,4 @@
+// app/admin/layout.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,6 +15,7 @@ import {
   FiMenu,
   FiX,
   FiUserCheck,
+  FiPlusCircle,
 } from "react-icons/fi";
 
 export default function AdminLayout({
@@ -66,14 +68,21 @@ export default function AdminLayout({
     { name: "Customers", href: "/admin/customers", icon: FiUserCheck },
     { name: "Class Schedule", href: "/admin/classes", icon: FiCalendar },
     { name: "Bookings", href: "/admin/bookings", icon: FiUsers },
-    { name: "Walk-in Booking", href: "/admin/walk-in", icon: FiPackage },
+    {
+      name: "Create Booking",
+      href: "/admin/create-booking",
+      icon: FiPlusCircle,
+    },
     { name: "Analytics", href: "/admin/analytics", icon: FiBarChart2 },
   ];
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Checking admin access...</p>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#2E3A4A] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Checking admin access...</p>
+        </div>
       </div>
     );
   }
@@ -94,20 +103,24 @@ export default function AdminLayout({
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="p-6">
+        <div className="p-6 h-full flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-2xl font-bold">Admin Panel</h1>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-white"
+              className="lg:hidden text-white hover:text-gray-300 transition"
             >
               <FiX size={24} />
             </button>
           </div>
 
-          <nav className="space-y-2">
+          <nav className="space-y-2 flex-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                pathname === item.href ||
+                (item.href === "/admin/create-booking" &&
+                  pathname?.startsWith("/admin/create-booking"));
+
               return (
                 <Link
                   key={item.name}
@@ -115,7 +128,7 @@ export default function AdminLayout({
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
                     isActive
-                      ? "bg-[#B7C9E5] text-[#2F3E55]"
+                      ? "bg-[#B7C9E5] text-[#2F3E55] font-medium"
                       : "hover:bg-[#3d4f61] text-white"
                   }`}
                 >
@@ -128,7 +141,7 @@ export default function AdminLayout({
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#3d4f61] transition w-full mt-8 text-white"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#3d4f61] transition w-full text-white mt-4"
           >
             <FiLogOut size={20} />
             <span>Logout</span>
@@ -143,14 +156,17 @@ export default function AdminLayout({
           <div className="flex items-center justify-between px-6 py-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-gray-600"
+              className="lg:hidden text-gray-600 hover:text-gray-900 transition"
             >
               <FiMenu size={24} />
             </button>
             <h2 className="text-xl font-semibold text-gray-800">
               Aure Pilates Studio
             </h2>
-            <Link href="/" className="text-sm text-[#2E3A4A] hover:underline">
+            <Link
+              href="/"
+              className="text-sm text-[#2E3A4A] hover:underline transition"
+            >
               View Site →
             </Link>
           </div>

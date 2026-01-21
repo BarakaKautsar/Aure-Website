@@ -10,6 +10,7 @@ import {
   FiPackage,
   FiTrendingUp,
   FiDownload,
+  FiUserCheck,
 } from "react-icons/fi";
 
 type AnalyticsData = {
@@ -38,6 +39,11 @@ type AnalyticsData = {
     month: string;
     newCustomers: number;
   }[];
+  ageBrackets: {
+    bracket: string;
+    count: number;
+    percentage: number;
+  }[];
 };
 
 export default function AnalyticsPage() {
@@ -52,6 +58,7 @@ export default function AnalyticsPage() {
     packageSales: [],
     dailyRevenue: [],
     customerGrowth: [],
+    ageBrackets: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -68,6 +75,32 @@ export default function AnalyticsPage() {
   useEffect(() => {
     loadAnalytics();
   }, [dateFrom, dateTo]);
+
+  const calculateAge = (birthDate: string): number => {
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
+
+  const getAgeBracket = (age: number): string => {
+    if (age < 18) return "Under 18";
+    if (age >= 18 && age <= 24) return "18-24";
+    if (age >= 25 && age <= 34) return "25-34";
+    if (age >= 35 && age <= 44) return "35-44";
+    if (age >= 45 && age <= 54) return "45-54";
+    if (age >= 55 && age <= 64) return "55-64";
+    return "65+";
+  };
 
   const loadAnalytics = async () => {
     setLoading(true);
@@ -147,11 +180,66 @@ export default function AnalyticsPage() {
         }
       });
 
-      // Get total customers
-      const { count: totalCustomers } = await supabase
+      // Get total customers and age data
+      const { data: customers, error: customersError } = await supabase
         .from("profiles")
-        .select("*", { count: "exact", head: true })
+        .select("id, date_of_birth, role, full_name")
         .neq("role", "admin");
+
+      if (customersError) {
+        console.error("Error fetching customers:", customersError);
+        throw customersError;
+      }
+
+      console.log("📊 Total customers fetched:", customers?.length);
+      console.log(
+        "📊 Customers with date_of_birth:",
+        customers?.filter((c) => c.date_of_birth).length
+      );
+      console.log("📊 Sample customer data:", customers?.slice(0, 3));
+
+      const totalCustomers = customers?.length || 0;
+
+      // Calculate age brackets
+      const ageBracketCounts: Record<string, number> = {
+        "Under 18": 0,
+        "18-24": 0,
+        "25-34": 0,
+        "35-44": 0,
+        "45-54": 0,
+        "55-64": 0,
+        "65+": 0,
+      };
+
+      let customersWithAge = 0;
+
+      customers?.forEach((customer) => {
+        if (customer.date_of_birth) {
+          console.log(
+            `📅 Processing customer with DOB: ${customer.date_of_birth}`
+          );
+          const age = calculateAge(customer.date_of_birth);
+          console.log(`   Calculated age: ${age}`);
+          const bracket = getAgeBracket(age);
+          console.log(`   Age bracket: ${bracket}`);
+          ageBracketCounts[bracket]++;
+          customersWithAge++;
+        }
+      });
+
+      console.log("📊 Age bracket counts:", ageBracketCounts);
+      console.log("📊 Total customers with age:", customersWithAge);
+
+      const ageBrackets = Object.entries(ageBracketCounts)
+        .map(([bracket, count]) => ({
+          bracket,
+          count,
+          percentage:
+            customersWithAge > 0 ? (count / customersWithAge) * 100 : 0,
+        }))
+        .filter((item) => item.count > 0); // Only show brackets with customers
+
+      console.log("📊 Final age brackets to display:", ageBrackets);
 
       // Calculate popular classes
       const classBookings: Record<string, { count: number; revenue: number }> =
@@ -265,7 +353,7 @@ export default function AnalyticsPage() {
       setAnalytics({
         totalRevenue,
         totalBookings: validBookings.length,
-        totalCustomers: totalCustomers || 0,
+        totalCustomers,
         totalPackagesSold: validPackages.length,
         revenueGrowth: 0, // Simplified for now
         bookingGrowth,
@@ -273,6 +361,7 @@ export default function AnalyticsPage() {
         packageSales,
         dailyRevenue,
         customerGrowth: [], // Simplified for now
+        ageBrackets,
       });
     } catch (error) {
       console.error("Error loading analytics:", error);
@@ -297,6 +386,12 @@ export default function AnalyticsPage() {
       ["", ""],
       ["Package Sales", "Units Sold"],
       ...analytics.packageSales.map((p) => [p.name, p.sold]),
+      ["", ""],
+      ["Age Brackets", "Count"],
+      ...analytics.ageBrackets.map((a) => [
+        a.bracket,
+        `${a.count} (${a.percentage.toFixed(1)}%)`,
+      ]),
     ];
 
     const csvContent = [
@@ -329,7 +424,10 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600">Loading analytics...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#2E3A4A] border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-600">Loading analytics...</p>
+        </div>
       </div>
     );
   }
@@ -488,6 +586,48 @@ export default function AnalyticsPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Age Demographics */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <FiUserCheck className="text-[#2E3A4A]" />
+          Customer Age Demographics
+        </h2>
+        {analytics.ageBrackets.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm mb-2">No age data available</p>
+            <p className="text-gray-400 text-xs">
+              Customers need to provide their date of birth
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {analytics.ageBrackets.map((bracket) => (
+              <div key={bracket.bracket}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-gray-800 min-w-20">
+                      {bracket.bracket}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {bracket.count} customer{bracket.count !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-[#2E3A4A]">
+                    {bracket.percentage.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-linear-to-r from-[#B7C9E5] to-[#2E3A4A] h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${bracket.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Daily Revenue Chart */}

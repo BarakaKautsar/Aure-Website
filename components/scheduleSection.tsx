@@ -683,7 +683,7 @@ export default function ScheduleSection() {
                       ) : isFull ? (
                         <button
                           onClick={() => handleBookNow(item, true)}
-                          className="px-6 py-3 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition whitespace-nowrap"
+                          className="px-6 py-3 border-2 border-orange-500 text-orange-500 rounded-full font-medium hover:bg-orange-500 hover:text-white transition whitespace-nowrap"
                         >
                           Join Waitlist
                         </button>
