@@ -310,7 +310,8 @@ export const translations = {
     // Footer
     footer: {
       contactUs: "Hubungi Kami",
-      copyright: "Hak Cipta © 2025 Seluruh Hak Dilindungi oleh Aure Pilates Studio",
+      copyright:
+        "Hak Cipta © 2025 Seluruh Hak Dilindungi oleh Aure Pilates Studio",
     },
 
     // Floating WhatsApp Button
@@ -367,6 +368,147 @@ export const translations = {
       success: "Berhasil",
     },
   },
-} as const;
+};
 
-export type TranslationKeys = typeof translations.en;
+// Type for the translation structure (uses string instead of literal types)
+export type TranslationKeys = {
+  header: {
+    home: string;
+    schedules: string;
+    packages: string;
+    classes: string;
+    coaches: string;
+    login: string;
+    myAccount: string;
+    adminPanel: string;
+  };
+  hero: {
+    tagline: string;
+  };
+  about: {
+    title: string;
+    paragraph1: string;
+    paragraph2: string;
+    paragraph3: string;
+    paragraph4: string;
+  };
+  classes: {
+    title: string;
+    reformer: {
+      title: string;
+      description: string;
+    };
+    spineCorrector: {
+      title: string;
+      description: string;
+    };
+    matt: {
+      title: string;
+      description: string;
+    };
+    contactPrompt: string;
+    contactCta: string;
+  };
+  coaches: {
+    title: string;
+  };
+  packages: {
+    title: string;
+    getPackage: string;
+    credits: string;
+    forClasses: string;
+    classesLabel: string;
+    oneTimePayment: string;
+    validFor: string;
+    days: string;
+    fromPurchase: string;
+    studio: string;
+    noPackages: string;
+    clearFilters: string;
+    allLocations: string;
+    allClasses: string;
+    contactPrompt: string;
+    contactCta: string;
+  };
+  schedule: {
+    title: string;
+    classesFor: string;
+    classesCount: string;
+    noClasses: string;
+    loading: string;
+    bookNow: string;
+    joinWaitlist: string;
+    classStarted: string;
+    completed: string;
+    minsLabel: string;
+    left: string;
+    allLocations: string;
+    allClasses: string;
+    allInstructors: string;
+    location: string;
+    classes: string;
+    instructor: string;
+    clearAll: string;
+  };
+  cta: {
+    title: string;
+    paragraph1: string;
+    paragraph2: string;
+    paragraph3: string;
+    viewClasses: string;
+    joinClass: string;
+    bookPrivate: string;
+  };
+  locations: {
+    title: string;
+    comingSoon: string;
+    getDirections: string;
+    openingSoon: string;
+  };
+  footer: {
+    contactUs: string;
+    copyright: string;
+  };
+  whatsapp: {
+    contactUs: string;
+    defaultMessage: string;
+  };
+  waitlist: {
+    title: string;
+    description: string;
+    autoBook: string;
+    autoBookDesc: string;
+    selectPackage: string;
+    creditsLeft: string;
+    creditNote: string;
+    noPackageNote: string;
+    cancel: string;
+    joining: string;
+    joinWaitlist: string;
+    loadingOptions: string;
+    successTitle: string;
+    successAutoBooked: string;
+    successMessage: string;
+    successAutoBookedMessage: string;
+    done: string;
+    alreadyOnWaitlist: string;
+    failedToJoin: string;
+    pleaseLogin: string;
+  };
+  common: {
+    date: string;
+    time: string;
+    class: string;
+    coach: string;
+    price: string;
+    capacity: string;
+    status: string;
+    back: string;
+    save: string;
+    cancel: string;
+    confirm: string;
+    loading: string;
+    error: string;
+    success: string;
+  };
+};
