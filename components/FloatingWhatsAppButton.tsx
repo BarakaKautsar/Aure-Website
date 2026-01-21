@@ -1,15 +1,15 @@
-// components/FloatingWhatsAppButton.tsx
 "use client";
 
 import { FaWhatsapp } from "react-icons/fa";
+import { useLanguage } from "@/lib/i18n";
 
 export default function FloatingWhatsAppButton() {
-  const whatsappNumber = "6281370251119"; // Your WhatsApp number
-  const whatsappMessage = "Hi! I'd like to inquire about Aure Pilates classes.";
+  const { t } = useLanguage();
+  const whatsappNumber = "6281370251119";
 
   const handleClick = () => {
     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-      whatsappMessage
+      t.whatsapp.defaultMessage
     )}`;
     window.open(url, "_blank");
   };
@@ -23,7 +23,7 @@ export default function FloatingWhatsAppButton() {
         aria-label="Chat with us on WhatsApp"
       >
         <FaWhatsapp className="w-6 h-6" />
-        <span className="font-medium text-lg">Contact Us</span>
+        <span className="font-medium text-lg">{t.whatsapp.contactUs}</span>
       </button>
 
       {/* Mobile: Icon only */}

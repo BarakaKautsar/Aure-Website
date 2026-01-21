@@ -6,6 +6,8 @@ import Image from "next/image";
 import { Cabin } from "next/font/google";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n";
+import LanguagePicker from "./LanguagePicker";
 
 const cabin = Cabin({
   subsets: ["latin"],
@@ -16,6 +18,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Get initial session
@@ -76,14 +79,17 @@ export default function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden gap-12 md:flex text-lg font-medium items-center">
-          <Link href="/">Home</Link>
-          <Link href="/schedule">Schedules</Link>
-          <Link href="/packages">Packages</Link>
-          <Link href="/classes">Classes</Link>
-          <Link href="/coaches">Coaches</Link>
+        <div className="hidden gap-8 lg:gap-12 md:flex text-lg font-medium items-center">
+          <Link href="/">{t.header.home}</Link>
+          <Link href="/schedule">{t.header.schedules}</Link>
+          <Link href="/packages">{t.header.packages}</Link>
+          <Link href="/classes">{t.header.classes}</Link>
+          <Link href="/coaches">{t.header.coaches}</Link>
 
           <div className="h-10 w-px bg-[#F7F4EF]/40" />
+
+          {/* Language Picker */}
+          <LanguagePicker />
 
           {/* Auth Button */}
           {user ? (
@@ -93,14 +99,14 @@ export default function Header() {
                   href="/admin"
                   className="flex items-center gap-2 rounded-full border-2 border-orange-400 bg-orange-500 text-white px-6 py-2 hover:bg-orange-600 transition font-semibold"
                 >
-                  Admin Panel
+                  {t.header.adminPanel}
                 </Link>
               )}
               <Link
                 href="/account/"
                 className="flex items-center gap-2 rounded-full border border-[#F7F4EF] px-6 py-2 hover:bg-[#F7F4EF] hover:text-[#2E3A4A] transition"
               >
-                My Account
+                {t.header.myAccount}
               </Link>
             </>
           ) : (
@@ -108,7 +114,7 @@ export default function Header() {
               href="/login"
               className="rounded-full border border-[#F7F4EF] px-6 py-2 hover:bg-[#F7F4EF] hover:text-[#2E3A4A] transition"
             >
-              Login
+              {t.header.login}
             </Link>
           )}
         </div>
@@ -140,20 +146,28 @@ export default function Header() {
       {open && (
         <div className="md:hidden bg-[#2E3A4A] px-6 py-6 text-lg flex flex-col gap-6">
           <Link href="/" onClick={() => setOpen(false)}>
-            Home
+            {t.header.home}
           </Link>
           <Link href="/schedule" onClick={() => setOpen(false)}>
-            Schedule
+            {t.header.schedules}
           </Link>
           <Link href="/packages" onClick={() => setOpen(false)}>
-            Packages
+            {t.header.packages}
           </Link>
           <Link href="/classes" onClick={() => setOpen(false)}>
-            Classes
+            {t.header.classes}
           </Link>
           <Link href="/coaches" onClick={() => setOpen(false)}>
-            Coaches
+            {t.header.coaches}
           </Link>
+
+          <div className="h-px w-full bg-[#F7F4EF]/30 my-2" />
+
+          {/* Language Picker in Mobile */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-[#F7F4EF]/70">Language:</span>
+            <LanguagePicker />
+          </div>
 
           <div className="h-px w-full bg-[#F7F4EF]/30 my-2" />
 
@@ -165,7 +179,7 @@ export default function Header() {
                   onClick={() => setOpen(false)}
                   className="rounded-full border-2 border-orange-400 bg-orange-500 text-white px-6 py-2 w-fit hover:bg-orange-600 transition font-semibold"
                 >
-                  Admin Panel
+                  {t.header.adminPanel}
                 </Link>
               )}
               <Link
@@ -173,7 +187,7 @@ export default function Header() {
                 onClick={() => setOpen(false)}
                 className="rounded-full border border-[#F7F4EF] px-6 py-2 w-fit hover:bg-[#F7F4EF] hover:text-[#2E3A4A] transition"
               >
-                My Account
+                {t.header.myAccount}
               </Link>
             </>
           ) : (
@@ -182,7 +196,7 @@ export default function Header() {
               onClick={() => setOpen(false)}
               className="rounded-full border border-[#F7F4EF] px-6 py-2 w-fit hover:bg-[#F7F4EF] hover:text-[#2E3A4A] transition"
             >
-              Login
+              {t.header.login}
             </Link>
           )}
         </div>

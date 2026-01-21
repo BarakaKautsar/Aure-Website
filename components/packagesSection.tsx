@@ -11,6 +11,7 @@ import {
   FiMail,
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
+import { useLanguage } from "@/lib/i18n";
 
 const inputBase =
   "w-full border border-[#D1D5DB] rounded-xl px-4 py-3 bg-white text-[#2F3E55] focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]";
@@ -44,11 +45,28 @@ const categoryDisplayMap: Record<string, string> = {
 
 export default function PackagesSection() {
   const router = useRouter();
+  const { t, language } = useLanguage();
   const [packages, setPackages] = useState<PackageType[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [selectedClassType, setSelectedClassType] = useState("All Classes");
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Localized location options
+  const locationOptions = [
+    { value: "All Locations", label: t.packages.allLocations },
+    { value: "Tasikmalaya", label: "Tasikmalaya" },
+    { value: "KBP", label: "KBP" },
+  ];
+
+  // Localized class type options
+  const classTypeOptions = [
+    { value: "All Classes", label: t.packages.allClasses },
+    { value: "Reformer", label: "Reformer" },
+    { value: "Spine Corrector", label: "Spine Corrector" },
+    { value: "Matt", label: "Matt" },
+    { value: "Aerial", label: "Aerial" },
+  ];
 
   useEffect(() => {
     fetchPackages();
@@ -84,7 +102,6 @@ export default function PackagesSection() {
 
   // Filter packages and group by location
   const filteredAndGroupedPackages = () => {
-    // First filter by selection
     const filtered = packages.filter((pkg) => {
       const locationMatch =
         selectedLocation === "All Locations" ||
@@ -97,7 +114,6 @@ export default function PackagesSection() {
       return locationMatch && classTypeMatch;
     });
 
-    // Group by location
     const grouped: Record<string, PackageType[]> = {};
     filtered.forEach((pkg) => {
       if (!grouped[pkg.location]) {
@@ -118,14 +134,10 @@ export default function PackagesSection() {
       return;
     }
 
-    // Redirect to purchase page
     router.push(`/purchase/${pkg.id}`);
   };
 
-  // Format class types for display (handle single or multiple)
   const formatClassTypes = (category: string) => {
-    // For now, single category
-    // In future: could be "reformer,matt" -> "Reformer, Matt"
     const categories = category.split(",").map((c) => c.trim());
     return categories.map((c) => categoryDisplayMap[c] || c).join(", ");
   };
@@ -133,7 +145,7 @@ export default function PackagesSection() {
   return (
     <section id="packages" className="bg-[#F7F4EF] py-24">
       <div className="max-w-7xl mx-auto px-6">
-        <h2 className="text-center mb-10">Save More With Packages</h2>
+        <h2 className="text-center mb-10">{t.packages.title}</h2>
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 max-w-2xl mx-auto">
@@ -144,9 +156,9 @@ export default function PackagesSection() {
               onChange={(e) => setSelectedLocation(e.target.value)}
               className={`${inputBase} appearance-none cursor-pointer`}
             >
-              {LOCATIONS.map((location) => (
-                <option key={location} value={location}>
-                  {location}
+              {locationOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -163,9 +175,9 @@ export default function PackagesSection() {
               onChange={(e) => setSelectedClassType(e.target.value)}
               className={`${inputBase} appearance-none cursor-pointer`}
             >
-              {CLASS_TYPES.map((classType) => (
-                <option key={classType} value={classType}>
-                  {classType}
+              {classTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -190,8 +202,8 @@ export default function PackagesSection() {
                       <div className="md:col-span-1">
                         <div className="sticky top-32 bg-[#F7F4EF] z-10 py-4">
                           <h3 className="text-2xl font-semibold text-[#2E3A4A]">
-                            {selectedLocation === "All Locations"
-                              ? `Packages for ${location}`
+                            {language === "id"
+                              ? `Paket untuk ${location}`
                               : `Packages for ${location}`}
                           </h3>
                         </div>
@@ -199,84 +211,81 @@ export default function PackagesSection() {
 
                       {/* Packages Cards - Right Side */}
                       <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {packagesByLocation[location].map((pkg) => {
-                          return (
-                            <div
-                              key={pkg.id}
-                              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col min-h-[420px]"
-                            >
-                              {/* Package Name */}
-                              <h3 className="text-xl font-semibold text-[#2E3A4A] mb-4 leading-tight">
-                                {pkg.name}
-                              </h3>
+                        {packagesByLocation[location].map((pkg) => (
+                          <div
+                            key={pkg.id}
+                            className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col min-h-[420px]"
+                          >
+                            {/* Package Name */}
+                            <h3 className="text-xl font-semibold text-[#2E3A4A] mb-4 leading-tight">
+                              {pkg.name}
+                            </h3>
 
-                              {/* Price */}
-                              <div className="mb-6">
-                                <div className="text-3xl font-bold text-[#2E3A4A]">
-                                  Rp. {pkg.price.toLocaleString("id-ID")}
-                                </div>
+                            {/* Price */}
+                            <div className="mb-6">
+                              <div className="text-3xl font-bold text-[#2E3A4A]">
+                                Rp. {pkg.price.toLocaleString("id-ID")}
                               </div>
-
-                              {/* Features List */}
-                              <div className="space-y-3 mb-6 grow">
-                                <div className="flex items-center gap-3">
-                                  <FiCheck
-                                    className="text-green-600 shrink-0"
-                                    size={18}
-                                  />
-                                  <span className="text-[#2E3A4A] text-sm">
-                                    <strong>{pkg.class_credits} credits</strong>{" "}
-                                    for{" "}
-                                    <strong>
-                                      {formatClassTypes(pkg.category)}
-                                    </strong>{" "}
-                                    classes
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <FiCheck
-                                    className="text-green-600 shrink-0"
-                                    size={18}
-                                  />
-                                  <span className="text-[#2E3A4A] text-sm">
-                                    One-time payment
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <FiClock
-                                    className="text-[#2E3A4A] shrink-0"
-                                    size={18}
-                                  />
-                                  <span className="text-[#2E3A4A] text-sm">
-                                    Valid for{" "}
-                                    <strong>{pkg.validity_days} days</strong>{" "}
-                                    from purchase
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <FiMapPin
-                                    className="text-[#2E3A4A] shrink-0"
-                                    size={18}
-                                  />
-                                  <span className="text-[#2E3A4A] text-sm">
-                                    <strong>{pkg.location}</strong> studio
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* CTA Button */}
-                              <button
-                                onClick={() => handleGetPackage(pkg)}
-                                className="w-full bg-orange-500 text-white py-3 rounded-full font-medium hover:bg-orange-600 transition-all mt-auto"
-                              >
-                                Get Package
-                              </button>
                             </div>
-                          );
-                        })}
+
+                            {/* Features List */}
+                            <div className="space-y-3 mb-6 grow">
+                              <div className="flex items-center gap-3">
+                                <FiCheck
+                                  className="text-green-600 shrink-0"
+                                  size={18}
+                                />
+                                <span className="text-[#2E3A4A] text-sm">
+                                  <strong>{pkg.class_credits}</strong>{" "}
+                                  {t.packages.credits} {t.packages.forClasses}{" "}
+                                  <strong>{formatClassTypes(pkg.category)}</strong>{" "}
+                                  {t.packages.classesLabel}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <FiCheck
+                                  className="text-green-600 shrink-0"
+                                  size={18}
+                                />
+                                <span className="text-[#2E3A4A] text-sm">
+                                  {t.packages.oneTimePayment}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <FiClock
+                                  className="text-[#2E3A4A] shrink-0"
+                                  size={18}
+                                />
+                                <span className="text-[#2E3A4A] text-sm">
+                                  {t.packages.validFor}{" "}
+                                  <strong>{pkg.validity_days}</strong>{" "}
+                                  {t.packages.days} {t.packages.fromPurchase}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <FiMapPin
+                                  className="text-[#2E3A4A] shrink-0"
+                                  size={18}
+                                />
+                                <span className="text-[#2E3A4A] text-sm">
+                                  <strong>{pkg.location}</strong>{" "}
+                                  {t.packages.studio}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* CTA Button */}
+                            <button
+                              onClick={() => handleGetPackage(pkg)}
+                              className="w-full bg-orange-500 text-white py-3 rounded-full font-medium hover:bg-orange-600 transition-all mt-auto"
+                            >
+                              {t.packages.getPackage}
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -285,94 +294,93 @@ export default function PackagesSection() {
                       {/* Location Header */}
                       {selectedLocation === "All Locations" && (
                         <h3 className="text-xl font-medium text-[#2E3A4A]">
-                          Packages for {location}
+                          {language === "id"
+                            ? `Paket untuk ${location}`
+                            : `Packages for ${location}`}
                         </h3>
                       )}
 
                       {/* Packages Grid */}
                       <div className="grid grid-cols-1 gap-6">
-                        {packagesByLocation[location].map((pkg) => {
-                          return (
-                            <div
-                              key={pkg.id}
-                              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col"
-                            >
-                              {/* Package Name */}
-                              <h3 className="text-xl font-semibold text-[#2E3A4A] mb-4 leading-tight">
-                                {pkg.name}
-                              </h3>
+                        {packagesByLocation[location].map((pkg) => (
+                          <div
+                            key={pkg.id}
+                            className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col"
+                          >
+                            {/* Package Name */}
+                            <h3 className="text-xl font-semibold text-[#2E3A4A] mb-4 leading-tight">
+                              {pkg.name}
+                            </h3>
 
-                              {/* Price */}
-                              <div className="mb-6">
-                                <div className="text-3xl font-bold text-[#2E3A4A]">
-                                  Rp. {pkg.price.toLocaleString("id-ID")}
-                                </div>
+                            {/* Price */}
+                            <div className="mb-6">
+                              <div className="text-3xl font-bold text-[#2E3A4A]">
+                                Rp. {pkg.price.toLocaleString("id-ID")}
                               </div>
-
-                              {/* Features List */}
-                              <div className="space-y-3 mb-6 grow">
-                                <div className="flex items-center gap-3">
-                                  <FiCheck
-                                    className="text-green-600 shrink-0"
-                                    size={18}
-                                  />
-                                  <span className="text-[#2E3A4A] text-sm">
-                                    <strong>{pkg.class_credits} credits</strong>{" "}
-                                    for{" "}
-                                    <strong>
-                                      {formatClassTypes(pkg.category)}
-                                    </strong>{" "}
-                                    classes
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <FiCheck
-                                    className="text-green-600 shrink-0"
-                                    size={18}
-                                  />
-                                  <span className="text-[#2E3A4A] text-sm">
-                                    One-time payment
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <FiClock
-                                    className="text-[#2E3A4A] shrink-0"
-                                    size={18}
-                                  />
-                                  <span className="text-[#2E3A4A] text-sm">
-                                    Valid for{" "}
-                                    <strong>{pkg.validity_days} days</strong>{" "}
-                                    from purchase
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <FiMapPin
-                                    className="text-[#2E3A4A] shrink-0"
-                                    size={18}
-                                  />
-                                  <span className="text-[#2E3A4A] text-sm">
-                                    <strong>{pkg.location}</strong> studio
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* CTA Button */}
-                              <button
-                                onClick={() => handleGetPackage(pkg)}
-                                className="w-full bg-orange-500 text-white py-3 rounded-full font-medium hover:bg-orange-600 transition-all"
-                              >
-                                Get Package
-                              </button>
                             </div>
-                          );
-                        })}
+
+                            {/* Features List */}
+                            <div className="space-y-3 mb-6 grow">
+                              <div className="flex items-center gap-3">
+                                <FiCheck
+                                  className="text-green-600 shrink-0"
+                                  size={18}
+                                />
+                                <span className="text-[#2E3A4A] text-sm">
+                                  <strong>{pkg.class_credits}</strong>{" "}
+                                  {t.packages.credits} {t.packages.forClasses}{" "}
+                                  <strong>{formatClassTypes(pkg.category)}</strong>{" "}
+                                  {t.packages.classesLabel}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <FiCheck
+                                  className="text-green-600 shrink-0"
+                                  size={18}
+                                />
+                                <span className="text-[#2E3A4A] text-sm">
+                                  {t.packages.oneTimePayment}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <FiClock
+                                  className="text-[#2E3A4A] shrink-0"
+                                  size={18}
+                                />
+                                <span className="text-[#2E3A4A] text-sm">
+                                  {t.packages.validFor}{" "}
+                                  <strong>{pkg.validity_days}</strong>{" "}
+                                  {t.packages.days} {t.packages.fromPurchase}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <FiMapPin
+                                  className="text-[#2E3A4A] shrink-0"
+                                  size={18}
+                                />
+                                <span className="text-[#2E3A4A] text-sm">
+                                  <strong>{pkg.location}</strong>{" "}
+                                  {t.packages.studio}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* CTA Button */}
+                            <button
+                              onClick={() => handleGetPackage(pkg)}
+                              className="w-full bg-orange-500 text-white py-3 rounded-full font-medium hover:bg-orange-600 transition-all"
+                            >
+                              {t.packages.getPackage}
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Divider between locations (not after last one) */}
+                    {/* Divider between locations */}
                     {selectedLocation === "All Locations" &&
                       locationIndex < locations.length - 1 && (
                         <div className="mt-16 border-t border-gray-200" />
@@ -382,9 +390,7 @@ export default function PackagesSection() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">
-                  No packages available for the selected filters.
-                </p>
+                <p className="text-gray-500 text-lg">{t.packages.noPackages}</p>
                 <button
                   onClick={() => {
                     setSelectedLocation("All Locations");
@@ -392,7 +398,7 @@ export default function PackagesSection() {
                   }}
                   className="mt-4 text-[#2E3A4A] underline hover:no-underline"
                 >
-                  Clear filters
+                  {t.packages.clearFilters}
                 </button>
               </div>
             )}
@@ -402,12 +408,9 @@ export default function PackagesSection() {
         {/* Bottom Info */}
         <div className="mt-20 max-w-4xl mx-auto">
           <p className="text-lg leading-relaxed mb-8">
-            Not sure which package best fits your needs?
+            {t.packages.contactPrompt}
             <br />
-            <span className="font-medium">
-              Contact us here, our team will be pleased to answer any questions
-              you have!
-            </span>
+            <span className="font-medium">{t.packages.contactCta}</span>
           </p>
 
           {/* Contact row */}

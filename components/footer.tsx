@@ -1,18 +1,23 @@
-// components/footer.tsx
+"use client";
+
 import { FiInstagram, FiMail, FiMapPin } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { Cabin } from "next/font/google";
+import { useLanguage } from "@/lib/i18n";
 
 const cabin = Cabin({
   subsets: ["latin"],
-  weight: ["400"], // add 500/600/700 if needed
+  weight: ["400"],
 });
+
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className={`${cabin.className} w-full bg-[#ABC3E5] text-[#304155]`}>
       <div className="max-w-6xl px-6 py-6 justify-start">
         {/* Title */}
-        <h2 className="text-2xl font-semibold mb-6">Contact Us</h2>
+        <h2 className="text-2xl font-semibold mb-6">{t.footer.contactUs}</h2>
 
         {/* Contact Row */}
         <div className="flex flex-col md:flex-row md:gap-10 gap-4 text-lg">
@@ -61,9 +66,7 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <p className="text-sm mt-8">
-          Copyrights © 2025 All Rights Reserved by Aure Pilates Studio
-        </p>
+        <p className="text-sm mt-8">{t.footer.copyright}</p>
       </div>
     </footer>
   );

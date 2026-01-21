@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { FiInstagram } from "react-icons/fi";
+import { useLanguage } from "@/lib/i18n";
 
 type Coach = {
   id: string;
@@ -14,6 +15,7 @@ type Coach = {
 
 export default function CoachesSection() {
   const [coaches, setCoaches] = useState<Coach[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchCoaches = async () => {
@@ -37,7 +39,7 @@ export default function CoachesSection() {
   return (
     <section id="coaches" className="bg-white py-20">
       <div className="max-w-7xl mx-auto px-6">
-        <h2 className="mb-12">Meet The Coaches</h2>
+        <h2 className="mb-12">{t.coaches.title}</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {coaches.map((coach) => (

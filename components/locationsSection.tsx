@@ -1,4 +1,7 @@
+"use client";
+
 import { FiMapPin, FiPhone, FiNavigation } from "react-icons/fi";
+import { useLanguage } from "@/lib/i18n";
 
 const locations = [
   {
@@ -19,18 +22,20 @@ const locations = [
     phone: null,
     phoneDisplay: null,
     mapLink: null,
-    image: "images/account.jpg", // Add image to public/images/
+    image: "images/account.jpg",
     isOpen: false,
     comingSoon: true,
   },
 ];
 
 export default function LocationsSection() {
+  const { t } = useLanguage();
+
   return (
     <section id="locations" className="w-full bg-[#F7F4EF] py-24 px-6">
       <div className="max-w-6xl mx-auto">
         {/* Title */}
-        <h2 className="text-center mb-16 text-[#2E3A4A]">Our Studios</h2>
+        <h2 className="text-center mb-16 text-[#2E3A4A]">{t.locations.title}</h2>
 
         {/* Location Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -44,7 +49,7 @@ export default function LocationsSection() {
               {/* Coming Soon Badge */}
               {location.comingSoon && (
                 <div className="absolute top-4 right-4 z-10 bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                  Coming Soon
+                  {t.locations.comingSoon}
                 </div>
               )}
 
@@ -99,14 +104,14 @@ export default function LocationsSection() {
                     className="inline-flex items-center gap-2 bg-[#2E3A4A] text-white px-6 py-3 rounded-full hover:opacity-90 transition font-medium"
                   >
                     <FiNavigation size={18} />
-                    Get Directions
+                    {t.locations.getDirections}
                   </a>
                 ) : (
                   <button
                     disabled
                     className="inline-flex items-center gap-2 bg-gray-300 text-gray-500 px-6 py-3 rounded-full cursor-not-allowed font-medium"
                   >
-                    Opening Soon
+                    {t.locations.openingSoon}
                   </button>
                 )}
               </div>

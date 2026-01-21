@@ -3,6 +3,7 @@ import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import WaitlistModal, { WaitlistSuccessModal } from "./WaitlistModal";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n";
 
 const LOCATIONS = [
   "Aure Pilates Studio Tasikmalaya",
@@ -39,13 +40,15 @@ type ScheduleItem = {
   originalPrice?: number;
   capacity: number;
   booked: number;
-  startTime: Date; // Add this for checking if class has started
+  startTime: Date;
   endTime: Date;
-  hasStarted: boolean; // Flag for UI
+  hasStarted: boolean;
 };
 
 export default function ScheduleSection() {
   const router = useRouter();
+  const { t, language } = useLanguage();
+
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -62,30 +65,28 @@ export default function ScheduleSection() {
   const [coaches, setCoaches] = useState<string[]>([]);
   const [classTypes, setClassTypes] = useState<string[]>([]);
 
-  // Booking modal state
   const [selectedClass, setSelectedClass] = useState<ScheduleItem | null>(null);
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
-  const [showWaitlistSuccessModal, setShowWaitlistSuccessModal] =
-    useState(false);
+  const [showWaitlistSuccessModal, setShowWaitlistSuccessModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Generate array of next 14 days (today + 13 days)
   const dateRange = useMemo(() => {
     const dates = [];
     const today = new Date();
+    const locale = language === "id" ? "id-ID" : "en-US";
 
     for (let i = 0; i < 14; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       dates.push({
         date: date.toISOString().split("T")[0],
-        dayName: date.toLocaleDateString("en-US", { weekday: "short" }),
+        dayName: date.toLocaleDateString(locale, { weekday: "short" }),
         dayNum: date.getDate(),
         isToday: i === 0,
       });
     }
     return dates;
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     loadSchedule();
@@ -131,10 +132,9 @@ export default function ScheduleSection() {
       )
       .gte("start_time", startOfDay.toISOString())
       .lte("start_time", endOfDay.toISOString())
-      .in("status", ["scheduled", "delayed", "completed"]) // Include completed to show them greyed out
+      .in("status", ["scheduled", "delayed", "completed"])
       .order("start_time", { ascending: true });
 
-    // Only filter by location if not "All Locations"
     if (filters.location !== "All Locations" && filters.location) {
       query = query.eq("location", filters.location);
     }
@@ -170,7 +170,6 @@ export default function ScheduleSection() {
           aerial: "Aerial",
         }[cls.class_type] || cls.class_type;
 
-      // Check if class has started (current time is past start time)
       const hasStarted = now >= startTime || cls.status === "completed";
 
       return {
@@ -216,7 +215,6 @@ export default function ScheduleSection() {
   }, [scheduleData, filters]);
 
   const handleBookNow = (classItem: ScheduleItem, isFull: boolean) => {
-    // Prevent booking if class has started
     if (classItem.hasStarted) {
       return;
     }
@@ -227,11 +225,9 @@ export default function ScheduleSection() {
     }
 
     if (isFull) {
-      // Still use waitlist modal for full classes
       setSelectedClass(classItem);
       setShowWaitlistModal(true);
     } else {
-      // Redirect to booking page with query params
       const params = new URLSearchParams({
         classId: classItem.id,
         title: classItem.className,
@@ -244,7 +240,6 @@ export default function ScheduleSection() {
         availableSpots: (classItem.capacity - classItem.booked).toString(),
       });
 
-      // Add original price if exists
       if (classItem.originalPrice) {
         params.append("originalPrice", classItem.originalPrice.toString());
       }
@@ -263,8 +258,9 @@ export default function ScheduleSection() {
     setShowWaitlistSuccessModal(false);
   };
 
+  const locale = language === "id" ? "id-ID" : "en-US";
   const selectedDateObj = new Date(selectedDate + "T00:00:00");
-  const formattedDate = selectedDateObj.toLocaleDateString("en-US", {
+  const formattedDate = selectedDateObj.toLocaleDateString(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -276,13 +272,12 @@ export default function ScheduleSection() {
     <section className="bg-[#F7F4EF] py-16 min-h-screen">
       <div className="max-w-7xl mx-auto px-6">
         <h1 className="text-4xl md:text-5xl font-light text-[#2E3A4A] mb-12">
-          Scheduled Classes
+          {t.schedule.title}
         </h1>
 
         {/* Scrollable Date Picker */}
         <div className="mb-8 relative">
           <div className="flex items-center gap-4">
-            {/* Left Arrow */}
             <button
               className="shrink-0 w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-white transition"
               onClick={() => {
@@ -294,7 +289,6 @@ export default function ScheduleSection() {
               ←
             </button>
 
-            {/* Scrollable Date Container */}
             <div
               id="date-scroll"
               className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth"
@@ -320,7 +314,6 @@ export default function ScheduleSection() {
               ))}
             </div>
 
-            {/* Right Arrow */}
             <button
               className="shrink-0 w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-white transition"
               onClick={() => {
@@ -341,47 +334,21 @@ export default function ScheduleSection() {
             <button
               onClick={() => {
                 const dropdown = document.getElementById("location-dropdown");
-                if (dropdown) {
-                  dropdown.classList.toggle("hidden");
-                }
+                if (dropdown) dropdown.classList.toggle("hidden");
               }}
               className="flex items-center gap-2 px-5 py-3 bg-white rounded-full border border-gray-300 hover:border-[#2E3A4A] transition font-medium text-[#2E3A4A]"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span>
-                {filters.location.replace("Aure Pilates Studio ", "") ||
-                  "Location"}
+                {filters.location === "All Locations"
+                  ? t.schedule.allLocations
+                  : filters.location.replace("Aure Pilates Studio ", "")}
               </span>
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
@@ -392,22 +359,18 @@ export default function ScheduleSection() {
               <button
                 onClick={() => {
                   setFilters((f) => ({ ...f, location: "All Locations" }));
-                  document
-                    .getElementById("location-dropdown")
-                    ?.classList.add("hidden");
+                  document.getElementById("location-dropdown")?.classList.add("hidden");
                 }}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
               >
-                All Locations
+                {t.schedule.allLocations}
               </button>
               {LOCATIONS.map((loc) => (
                 <button
                   key={loc}
                   onClick={() => {
                     setFilters((f) => ({ ...f, location: loc }));
-                    document
-                      .getElementById("location-dropdown")
-                      ?.classList.add("hidden");
+                    document.getElementById("location-dropdown")?.classList.add("hidden");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                 >
@@ -422,38 +385,16 @@ export default function ScheduleSection() {
             <button
               onClick={() => {
                 const dropdown = document.getElementById("class-dropdown");
-                if (dropdown) {
-                  dropdown.classList.toggle("hidden");
-                }
+                if (dropdown) dropdown.classList.toggle("hidden");
               }}
               className="flex items-center gap-2 px-5 py-3 bg-white rounded-full border border-gray-300 hover:border-[#2E3A4A] transition font-medium text-[#2E3A4A]"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
-              <span>{filters.classType || "Classes"}</span>
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
+              <span>{filters.classType || t.schedule.classes}</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
@@ -464,22 +405,18 @@ export default function ScheduleSection() {
               <button
                 onClick={() => {
                   setFilters((f) => ({ ...f, classType: "" }));
-                  document
-                    .getElementById("class-dropdown")
-                    ?.classList.add("hidden");
+                  document.getElementById("class-dropdown")?.classList.add("hidden");
                 }}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
               >
-                All Classes
+                {t.schedule.allClasses}
               </button>
               {classTypes.map((type) => (
                 <button
                   key={type}
                   onClick={() => {
                     setFilters((f) => ({ ...f, classType: type }));
-                    document
-                      .getElementById("class-dropdown")
-                      ?.classList.add("hidden");
+                    document.getElementById("class-dropdown")?.classList.add("hidden");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                 >
@@ -494,38 +431,16 @@ export default function ScheduleSection() {
             <button
               onClick={() => {
                 const dropdown = document.getElementById("coach-dropdown");
-                if (dropdown) {
-                  dropdown.classList.toggle("hidden");
-                }
+                if (dropdown) dropdown.classList.toggle("hidden");
               }}
               className="flex items-center gap-2 px-5 py-3 bg-white rounded-full border border-gray-300 hover:border-[#2E3A4A] transition font-medium text-[#2E3A4A]"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span>{filters.coach || "Instructor"}</span>
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
+              <span>{filters.coach || t.schedule.instructor}</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
@@ -536,22 +451,18 @@ export default function ScheduleSection() {
               <button
                 onClick={() => {
                   setFilters((f) => ({ ...f, coach: "" }));
-                  document
-                    .getElementById("coach-dropdown")
-                    ?.classList.add("hidden");
+                  document.getElementById("coach-dropdown")?.classList.add("hidden");
                 }}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
               >
-                All Instructors
+                {t.schedule.allInstructors}
               </button>
               {coaches.map((coach) => (
                 <button
                   key={coach}
                   onClick={() => {
                     setFilters((f) => ({ ...f, coach: coach }));
-                    document
-                      .getElementById("coach-dropdown")
-                      ?.classList.add("hidden");
+                    document.getElementById("coach-dropdown")?.classList.add("hidden");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm capitalize"
                 >
@@ -561,7 +472,7 @@ export default function ScheduleSection() {
             </div>
           </div>
 
-          {/* Clear Filters Button (only show if filters are active) */}
+          {/* Clear Filters Button */}
           {(filters.classType ||
             filters.coach ||
             filters.location !== "Aure Pilates Studio Tasikmalaya") && (
@@ -575,7 +486,7 @@ export default function ScheduleSection() {
               }
               className="px-4 py-2 text-sm text-gray-600 hover:text-[#2E3A4A] underline"
             >
-              Clear all
+              {t.schedule.clearAll}
             </button>
           )}
         </div>
@@ -583,19 +494,21 @@ export default function ScheduleSection() {
         {/* Selected Date & Class Count */}
         <div className="mb-6">
           <h2 className="text-2xl font-medium text-[#2E3A4A]">
-            Classes scheduled for {formattedDate}
+            {t.schedule.classesFor} {formattedDate}
           </h2>
-          <p className="text-gray-600">{classCount} classes</p>
+          <p className="text-gray-600">
+            {classCount} {t.schedule.classesCount}
+          </p>
         </div>
 
         {/* Classes List */}
         {loading ? (
           <div className="text-center py-12">
-            <p className="text-[#2F3E55]">Loading classes...</p>
+            <p className="text-[#2F3E55]">{t.schedule.loading}</p>
           </div>
         ) : filteredSchedule.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No classes available for this date.</p>
+            <p className="text-gray-500">{t.schedule.noClasses}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -624,7 +537,9 @@ export default function ScheduleSection() {
                         {item.time}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {hasStarted ? "Class started" : "50 mins"}
+                        {hasStarted
+                          ? t.schedule.classStarted
+                          : `50 ${t.schedule.minsLabel}`}
                       </p>
                     </div>
 
@@ -667,7 +582,9 @@ export default function ScheduleSection() {
                           hasStarted ? "text-gray-400" : "text-gray-500"
                         }`}
                       >
-                        {hasStarted ? "Completed" : `${spotsLeft} left`}
+                        {hasStarted
+                          ? t.schedule.completed
+                          : `${spotsLeft} ${t.schedule.left}`}
                       </p>
                     </div>
 
@@ -678,21 +595,21 @@ export default function ScheduleSection() {
                           disabled
                           className="px-6 py-3 bg-gray-300 text-gray-500 rounded-full font-medium cursor-not-allowed whitespace-nowrap"
                         >
-                          Class Started
+                          {t.schedule.classStarted}
                         </button>
                       ) : isFull ? (
                         <button
                           onClick={() => handleBookNow(item, true)}
-                          className="px-6 py-3 border-2 border-orange-500 text-orange-500 rounded-full font-medium hover:bg-orange-500 hover:text-white transition whitespace-nowrap"
+                          className="px-6 py-3 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition whitespace-nowrap"
                         >
-                          Join Waitlist
+                          {t.schedule.joinWaitlist}
                         </button>
                       ) : (
                         <button
                           onClick={() => handleBookNow(item, false)}
                           className="px-6 py-3 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition whitespace-nowrap"
                         >
-                          Book Now
+                          {t.schedule.bookNow}
                         </button>
                       )}
                     </div>
@@ -709,7 +626,7 @@ export default function ScheduleSection() {
               id: selectedClass.id,
               title: selectedClass.className,
               time: selectedClass.time,
-              date: new Date(selectedClass.date).toLocaleDateString("en-US", {
+              date: new Date(selectedClass.date).toLocaleDateString(locale, {
                 weekday: "short",
                 day: "2-digit",
                 month: "short",

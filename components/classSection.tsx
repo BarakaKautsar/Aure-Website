@@ -1,34 +1,36 @@
+"use client";
+
 import Image from "next/image";
 import { FiInstagram, FiMail } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
-
-const classes = [
-  {
-    title: "Reformer",
-    image: "/images/Classes/Reformer.jpg",
-    description:
-      "Using the reformer machine, this practice adds resistance and support to enhance strength, balance, and precision. Reformer Pilates allows for highly controlled, low-impact movement that challenges the body while protecting the joints.",
-  },
-  {
-    title: "Spine Corrector",
-    image: "/images/Classes/Spine.jpg",
-    description:
-      "Designed to improve spinal mobility, posture, and core connection. Spine-focused sessions help release tension, support alignment, and encourage healthy, pain-free movement.",
-  },
-  {
-    title: "Matt",
-    image: "/images/Classes/Matt.jpg",
-    description:
-      "Build strength from the inside out using your own body weight. Mat Pilates focuses on core stability, flexibility, and alignment—perfect for creating a strong foundation and improving everyday movement.",
-  },
-];
+import { useLanguage } from "@/lib/i18n";
 
 export default function ClassesSection() {
+  const { t } = useLanguage();
+
+  const classes = [
+    {
+      title: t.classes.reformer.title,
+      image: "/images/Classes/Reformer.jpg",
+      description: t.classes.reformer.description,
+    },
+    {
+      title: t.classes.spineCorrector.title,
+      image: "/images/Classes/Spine.jpg",
+      description: t.classes.spineCorrector.description,
+    },
+    {
+      title: t.classes.matt.title,
+      image: "/images/Classes/Matt.jpg",
+      description: t.classes.matt.description,
+    },
+  ];
+
   return (
     <section id="classes" className="w-full bg-[#F7F4EF] py-24 px-6">
       <div className="max-w-6xl mx-auto">
         {/* Title */}
-        <h2 className="text-center mb-16">Classes Available</h2>
+        <h2 className="text-center mb-16">{t.classes.title}</h2>
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -62,12 +64,9 @@ export default function ClassesSection() {
         {/* Bottom text */}
         <div className="mt-20 max-w-4xl">
           <p className="text-lg leading-relaxed mb-8">
-            Not sure which of our class best fit your needs?
+            {t.classes.contactPrompt}
             <br />
-            <span className="font-medium">
-              Contact us here, Our team will be pleased to answer any question
-              you have!
-            </span>
+            <span className="font-medium">{t.classes.contactCta}</span>
           </p>
 
           {/* Contact row */}

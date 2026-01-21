@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { FiX, FiCheck } from "react-icons/fi";
 import { supabase } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n";
 
 type ClassInfo = {
   id: string;
@@ -11,7 +12,7 @@ type ClassInfo = {
   date: string;
   coach: string;
   location: string;
-  classType: string; // 'reformer', 'spine_corrector', 'matt'
+  classType: string;
 };
 
 type UserPackage = {
@@ -35,6 +36,7 @@ export default function WaitlistModal({
   onClose,
   onSuccess,
 }: Props) {
+  const { t } = useLanguage();
   const [joining, setJoining] = useState(false);
   const [availablePackages, setAvailablePackages] = useState<UserPackage[]>([]);
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
@@ -57,7 +59,6 @@ export default function WaitlistModal({
       return;
     }
 
-    // Fetch active packages with remaining credits that match the class type
     const { data, error } = await supabase
       .from("packages")
       .select(
@@ -78,17 +79,15 @@ export default function WaitlistModal({
       .order("expires_at", { ascending: true });
 
     if (!error && data) {
-      // Filter packages by matching category
       const matchingPackages = (data as unknown as UserPackage[]).filter(
         (pkg) => pkg.package_type.category === classInfo.classType
       );
 
       setAvailablePackages(matchingPackages);
 
-      // Auto-select first matching package if available
       if (matchingPackages.length > 0) {
         setSelectedPackageId(matchingPackages[0].id);
-        setAutoBook(true); // Default to auto-book if they have a package
+        setAutoBook(true);
       }
     }
 
@@ -104,11 +103,10 @@ export default function WaitlistModal({
       } = await supabase.auth.getUser();
 
       if (!user) {
-        alert("Please log in to join the waitlist");
+        alert(t.waitlist.pleaseLogin);
         return;
       }
 
-      // Check if already on waitlist
       const { data: existing } = await supabase
         .from("waitlist")
         .select("id")
@@ -118,12 +116,11 @@ export default function WaitlistModal({
         .single();
 
       if (existing) {
-        alert("You're already on the waitlist for this class!");
+        alert(t.waitlist.alreadyOnWaitlist);
         onClose();
         return;
       }
 
-      // Add to waitlist
       const { error } = await supabase.from("waitlist").insert({
         user_id: user.id,
         class_id: classInfo.id,
@@ -137,7 +134,7 @@ export default function WaitlistModal({
       onSuccess();
     } catch (error) {
       console.error("Waitlist error:", error);
-      alert("Failed to join waitlist. Please try again.");
+      alert(t.waitlist.failedToJoin);
     } finally {
       setJoining(false);
     }
@@ -164,35 +161,34 @@ export default function WaitlistModal({
         </button>
 
         <h3 className="text-2xl font-medium text-[#2F3E55] mb-2">
-          Join Waitlist
+          {t.waitlist.title}
         </h3>
 
-        <p className="text-sm text-gray-600 mb-6">
-          This class is currently full. Join the waitlist and we'll notify you
-          if a spot opens up.
-        </p>
+        <p className="text-sm text-gray-600 mb-6">{t.waitlist.description}</p>
 
         {/* Class Details */}
         <div className="bg-[#F7F4EF] rounded-xl p-4 mb-6">
           <h4 className="font-medium text-[#2F3E55] mb-2">{classInfo.title}</h4>
           <div className="space-y-1 text-sm text-[#2F3E55]">
             <p>
-              <strong>Date:</strong> {classInfo.date}
+              <strong>{t.common.date}:</strong> {classInfo.date}
             </p>
             <p>
-              <strong>Time:</strong> {classInfo.time}
+              <strong>{t.common.time}:</strong> {classInfo.time}
             </p>
             <p>
-              <strong>Coach:</strong> {classInfo.coach}
+              <strong>{t.common.coach}:</strong> {classInfo.coach}
             </p>
             <p>
-              <strong>Location:</strong> {classInfo.location}
+              <strong>{t.schedule.location}:</strong> {classInfo.location}
             </p>
           </div>
         </div>
 
         {loading ? (
-          <p className="text-center text-gray-500 py-4">Loading options...</p>
+          <p className="text-center text-gray-500 py-4">
+            {t.waitlist.loadingOptions}
+          </p>
         ) : (
           <>
             {/* Auto-booking Option */}
@@ -207,11 +203,10 @@ export default function WaitlistModal({
                   />
                   <div className="flex-1">
                     <p className="font-medium text-[#2F3E55]">
-                      Auto-book when available
+                      {t.waitlist.autoBook}
                     </p>
                     <p className="text-sm text-gray-600 mt-1">
-                      Automatically book this class using your package credit
-                      when a spot opens
+                      {t.waitlist.autoBookDesc}
                     </p>
                   </div>
                 </label>
@@ -219,7 +214,7 @@ export default function WaitlistModal({
                 {autoBook && (
                   <div className="mt-4">
                     <label className="block text-sm font-medium text-[#2F3E55] mb-2">
-                      Select Package to Use
+                      {t.waitlist.selectPackage}
                     </label>
                     <select
                       value={selectedPackageId}
@@ -229,13 +224,12 @@ export default function WaitlistModal({
                       {availablePackages.map((pkg) => (
                         <option key={pkg.id} value={pkg.id}>
                           {pkg.package_type.name} - {pkg.remaining_credits}{" "}
-                          credits left
+                          {t.waitlist.creditsLeft}
                         </option>
                       ))}
                     </select>
                     <p className="text-xs text-gray-500 mt-2">
-                      ✓ Your credit will only be used if a spot becomes
-                      available
+                      ✓ {t.waitlist.creditNote}
                     </p>
                   </div>
                 )}
@@ -245,9 +239,7 @@ export default function WaitlistModal({
             {!canAutoBook && (
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> You don't have a compatible package for
-                  this class. We'll notify you when a spot opens, and you can
-                  book with single payment.
+                  <strong>Note:</strong> {t.waitlist.noPackageNote}
                 </p>
               </div>
             )}
@@ -259,14 +251,14 @@ export default function WaitlistModal({
                 disabled={joining}
                 className="flex-1 px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition disabled:opacity-50"
               >
-                Cancel
+                {t.waitlist.cancel}
               </button>
               <button
                 onClick={handleJoinWaitlist}
                 disabled={joining || (autoBook && !selectedPackageId)}
                 className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {joining ? "Joining..." : "Join Waitlist"}
+                {joining ? t.waitlist.joining : t.waitlist.joinWaitlist}
               </button>
             </div>
           </>
@@ -284,6 +276,8 @@ export function WaitlistSuccessModal({
   onClose: () => void;
   autoBooked?: boolean;
 }) {
+  const { t } = useLanguage();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -301,20 +295,20 @@ export function WaitlistSuccessModal({
         </div>
 
         <h3 className="text-2xl font-medium text-[#2F3E55] mb-3">
-          {autoBooked ? "Booking Confirmed!" : "Added to Waitlist!"}
+          {autoBooked ? t.waitlist.successAutoBooked : t.waitlist.successTitle}
         </h3>
 
         <p className="text-sm text-[#2F3E55] mb-6">
           {autoBooked
-            ? "A spot opened up and you've been automatically booked into this class!"
-            : "We'll notify you if a spot becomes available for this class."}
+            ? t.waitlist.successAutoBookedMessage
+            : t.waitlist.successMessage}
         </p>
 
         <button
           onClick={onClose}
           className="bg-[#B7C9E5] text-[#2F3E55] px-6 py-3 rounded-xl hover:opacity-90 w-full"
         >
-          Done
+          {t.waitlist.done}
         </button>
       </div>
     </div>
