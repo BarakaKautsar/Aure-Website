@@ -127,6 +127,7 @@ export const translations = {
     // Footer
     footer: {
       contactUs: "Contact Us",
+      generalContact: "General Contact",
       copyright: "Copyrights © 2025 All Rights Reserved by Aure Pilates Studio",
     },
 
@@ -134,6 +135,8 @@ export const translations = {
     whatsapp: {
       contactUs: "Contact Us",
       defaultMessage: "Hi! I'd like to inquire about Aure Pilates classes.",
+      selectLocation: "Select Location",
+      selectLocationDesc: "Choose which studio location you'd like to contact",
     },
 
     // Waitlist Modal
@@ -310,6 +313,7 @@ export const translations = {
     // Footer
     footer: {
       contactUs: "Hubungi Kami",
+      generalContact: "Kontak Umum",
       copyright:
         "Hak Cipta © 2025 Seluruh Hak Dilindungi oleh Aure Pilates Studio",
     },
@@ -318,6 +322,8 @@ export const translations = {
     whatsapp: {
       contactUs: "Hubungi Kami",
       defaultMessage: "Hai! Saya ingin bertanya tentang kelas Aure Pilates.",
+      selectLocation: "Pilih Lokasi",
+      selectLocationDesc: "Pilih lokasi studio yang ingin Anda hubungi",
     },
 
     // Waitlist Modal
@@ -467,11 +473,14 @@ export type TranslationKeys = {
   };
   footer: {
     contactUs: string;
+    generalContact: string;
     copyright: string;
   };
   whatsapp: {
     contactUs: string;
     defaultMessage: string;
+    selectLocation: string;
+    selectLocationDesc: string;
   };
   waitlist: {
     title: string;
