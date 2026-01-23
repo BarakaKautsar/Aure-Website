@@ -168,6 +168,57 @@ export const translations = {
       pleaseLogin: "Please log in to join the waitlist",
     },
 
+    // Booking Page
+    booking: {
+      title: "Book Your Class",
+      backToSchedule: "Back to Schedule",
+      classInfo: "Class Information",
+      numberOfAttendees: "Number of Attendees",
+      max: "Max",
+      available: "available",
+      attendeeDetails: "Attendee Details",
+      useMyDetails: "Use My Details",
+      attendee: "Attendee",
+      fullName: "Full Name",
+      phoneNumber: "Phone Number",
+      enterFullName: "Enter full name",
+      enterPhone: "08123456789",
+      paymentMethod: "Payment Method",
+      usePackageCredits: "Use Package Credits",
+      selectFromPackages: "Select from your available packages",
+      selectPackage: "Select a package",
+      expires: "Expires",
+      expiringSoon: "Expiring soon!",
+      singlePayment: "Single Payment",
+      paymentDescription: "Pay with credit card, e-wallet, or bank transfer",
+      noPackagesAvailable:
+        "You don't have any active packages for this class type. Get a package to save more!",
+      explorePackages: "Explore Packages",
+      notEnoughCredits:
+        "⚠️ Not enough credits. You need {quantity} credits but only have {remaining}. Please choose single payment or select another package.",
+      bookingSummary: "Booking Summary",
+      attendees: "Attendees",
+      pricePerPerson: "Price per person",
+      total: "Total",
+      credit: "credit",
+      credits: "credits",
+      confirmBooking: "Confirm Booking",
+      proceedToPayment: "Proceed to Payment",
+      processing: "Processing...",
+      creditsWillBeDeducted:
+        "{quantity} {unit} will be deducted from your package",
+      needMoreCredits: "You need {quantity} more {unit}",
+      loading: "Loading...",
+      errorSelectPackage: "Please select a package",
+      errorNotEnoughCredits:
+        "Not enough credits in selected package. Please choose single payment or another package.",
+      errorAttendeeName: "Please enter name for attendee {number}",
+      errorAttendeePhone: "Please enter phone number for attendee {number}",
+      studioRules: "Studio Rules & Policies",
+      readRules: "Please read and agree to our studio rules before booking",
+      viewRules: "View Studio Rules",
+    },
+
     // Common
     common: {
       date: "Date",
@@ -184,6 +235,7 @@ export const translations = {
       loading: "Loading...",
       error: "Error",
       success: "Success",
+      location: "Location",
     },
   },
 
@@ -356,6 +408,58 @@ export const translations = {
       pleaseLogin: "Silakan masuk untuk bergabung daftar tunggu",
     },
 
+    // Booking Page
+    booking: {
+      title: "Pesan Kelas Anda",
+      backToSchedule: "Kembali ke Jadwal",
+      classInfo: "Informasi Kelas",
+      numberOfAttendees: "Jumlah Peserta",
+      max: "Maks",
+      available: "tersedia",
+      attendeeDetails: "Detail Peserta",
+      useMyDetails: "Gunakan Detail Saya",
+      attendee: "Peserta",
+      fullName: "Nama Lengkap",
+      phoneNumber: "Nomor Telepon",
+      enterFullName: "Masukkan nama lengkap",
+      enterPhone: "08123456789",
+      paymentMethod: "Metode Pembayaran",
+      usePackageCredits: "Gunakan Kredit Paket",
+      selectFromPackages: "Pilih dari paket yang tersedia",
+      selectPackage: "Pilih paket",
+      expires: "Kedaluwarsa",
+      expiringSoon: "Segera kedaluwarsa!",
+      singlePayment: "Pembayaran Tunggal",
+      paymentDescription:
+        "Bayar dengan kartu kredit, e-wallet, atau transfer bank",
+      noPackagesAvailable:
+        "Anda tidak memiliki paket aktif untuk jenis kelas ini. Dapatkan paket untuk hemat lebih banyak!",
+      explorePackages: "Jelajahi Paket",
+      notEnoughCredits:
+        "⚠️ Kredit tidak cukup. Anda memerlukan {quantity} kredit tetapi hanya memiliki {remaining}. Silakan pilih pembayaran tunggal atau pilih paket lain.",
+      bookingSummary: "Ringkasan Pemesanan",
+      attendees: "Peserta",
+      pricePerPerson: "Harga per orang",
+      total: "Total",
+      credit: "kredit",
+      credits: "kredit",
+      confirmBooking: "Konfirmasi Pemesanan",
+      proceedToPayment: "Lanjutkan ke Pembayaran",
+      processing: "Memproses...",
+      creditsWillBeDeducted: "{quantity} {unit} akan dikurangi dari paket Anda",
+      needMoreCredits: "Anda memerlukan {quantity} {unit} lagi",
+      loading: "Memuat...",
+      errorSelectPackage: "Silakan pilih paket",
+      errorNotEnoughCredits:
+        "Kredit tidak cukup dalam paket yang dipilih. Silakan pilih pembayaran tunggal atau paket lain.",
+      errorAttendeeName: "Silakan masukkan nama untuk peserta {number}",
+      errorAttendeePhone:
+        "Silakan masukkan nomor telepon untuk peserta {number}",
+      studioRules: "Peraturan & Kebijakan Studio",
+      readRules: "Harap baca dan setujui peraturan studio kami sebelum memesan",
+      viewRules: "Lihat Peraturan Studio",
+    },
+
     // Common
     common: {
       date: "Tanggal",
@@ -372,6 +476,7 @@ export const translations = {
       loading: "Memuat...",
       error: "Kesalahan",
       success: "Berhasil",
+      location: "Lokasi",
     },
   },
 };
@@ -504,6 +609,51 @@ export type TranslationKeys = {
     failedToJoin: string;
     pleaseLogin: string;
   };
+  booking: {
+    title: string;
+    backToSchedule: string;
+    classInfo: string;
+    numberOfAttendees: string;
+    max: string;
+    available: string;
+    attendeeDetails: string;
+    useMyDetails: string;
+    attendee: string;
+    fullName: string;
+    phoneNumber: string;
+    enterFullName: string;
+    enterPhone: string;
+    paymentMethod: string;
+    usePackageCredits: string;
+    selectFromPackages: string;
+    selectPackage: string;
+    expires: string;
+    expiringSoon: string;
+    singlePayment: string;
+    paymentDescription: string;
+    noPackagesAvailable: string;
+    explorePackages: string;
+    notEnoughCredits: string;
+    bookingSummary: string;
+    attendees: string;
+    pricePerPerson: string;
+    total: string;
+    credit: string;
+    credits: string;
+    confirmBooking: string;
+    proceedToPayment: string;
+    processing: string;
+    creditsWillBeDeducted: string;
+    needMoreCredits: string;
+    loading: string;
+    errorSelectPackage: string;
+    errorNotEnoughCredits: string;
+    errorAttendeeName: string;
+    errorAttendeePhone: string;
+    studioRules: string;
+    readRules: string;
+    viewRules: string;
+  };
   common: {
     date: string;
     time: string;
@@ -519,5 +669,6 @@ export type TranslationKeys = {
     loading: string;
     error: string;
     success: string;
+    location: string;
   };
 };

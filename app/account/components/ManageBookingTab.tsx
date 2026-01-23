@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import {
-  ConfirmCancelModal,
-  CancelCompleteModal,
-  Booking,
-} from "./CancelBookingModal";
+import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n";
 
 type BookingRow = {
   id: string;
@@ -19,6 +16,8 @@ type BookingRow = {
     start_time: string;
     end_time: string;
     status: string;
+    location: string;
+    class_type: string;
     coach: {
       name: string;
     } | null;
@@ -38,26 +37,20 @@ type DisplayBooking = {
   time: string;
   className: string;
   coach: string;
+  location: string;
+  classType: string;
   packageUsed: string;
-  status: "on-time" | "delayed" | "cancelled";
+  status: "scheduled" | "delayed" | "cancelled";
   startTime: Date;
   paymentMethod: string;
   packageId: string | null;
-  packageRemainingCredits: number | null;
-};
-
-const statusDot = {
-  "on-time": "bg-green-500",
-  delayed: "bg-yellow-400",
-  cancelled: "bg-red-500",
 };
 
 export default function ManageBookingTab() {
   const [bookings, setBookings] = useState<DisplayBooking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [showComplete, setShowComplete] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+  const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadBookings();
@@ -89,6 +82,8 @@ export default function ManageBookingTab() {
           start_time,
           end_time,
           status,
+          location,
+          class_type,
           coach:coach_id (
             name
           )
@@ -100,10 +95,10 @@ export default function ManageBookingTab() {
             name
           )
         )
-      `
+      `,
       )
       .eq("user_id", user.id)
-      .in("status", ["confirmed"])
+      .eq("status", "confirmed")
       .gte("class.start_time", new Date().toISOString())
       .order("class(start_time)", { ascending: true });
 
@@ -140,7 +135,7 @@ export default function ManageBookingTab() {
         })}`;
 
         // Map class status to display status
-        let displayStatus: "on-time" | "delayed" | "cancelled" = "on-time";
+        let displayStatus: "scheduled" | "delayed" | "cancelled" = "scheduled";
         if (booking.class.status === "cancelled") {
           displayStatus = "cancelled";
         } else if (booking.class.status === "delayed") {
@@ -159,12 +154,13 @@ export default function ManageBookingTab() {
           time: timeStr,
           className: booking.class.title,
           coach: booking.class.coach?.name || "TBA",
+          location: booking.class.location,
+          classType: booking.class.class_type,
           packageUsed: packageUsed,
           status: displayStatus,
           startTime: startTime,
           paymentMethod: booking.payment_method,
           packageId: booking.package_id,
-          packageRemainingCredits: booking.package?.remaining_credits || null,
         };
       });
 
@@ -172,182 +168,46 @@ export default function ManageBookingTab() {
     setLoading(false);
   };
 
-  const confirmCancel = async (reason?: string) => {
-    if (!selectedBooking) return;
-
-    // Check if class is less than 1 hour away
-    const now = new Date();
-    const startTime = selectedBooking.startTime;
-    const hoursDiff = (startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-    if (hoursDiff < 1) {
-      alert(
-        "Cannot cancel: Class starts in less than 1 hour. Cancellations must be made at least 1 hour before class time."
-      );
-      setSelectedBooking(null);
-      return;
-    }
-
-    setCancelling(true);
-
-    try {
-      // 1. Cancel the booking
-      const { error } = await supabase
-        .from("bookings")
-        .update({
-          status: "cancelled",
-          cancellation_reason: reason || null,
-        })
-        .eq("id", selectedBooking.id);
-
-      if (error) throw error;
-
-      // 2. If booking was paid with package credit, refund the credit
-      if (
-        selectedBooking.paymentMethod === "package_credit" &&
-        selectedBooking.packageId
-      ) {
-        const { error: refundError } = await supabase
-          .from("packages")
-          .update({
-            remaining_credits:
-              (selectedBooking.packageRemainingCredits || 0) + 1,
-          })
-          .eq("id", selectedBooking.packageId);
-
-        if (refundError) {
-          console.error("Error refunding package credit:", refundError);
-          alert(
-            "Booking cancelled but there was an issue refunding your credit. Please contact support."
-          );
-        }
-      }
-
-      // ✅ 3. Send cancellation confirmation email
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("email, full_name")
-            .eq("id", user.id)
-            .single();
-
-          if (profile?.email) {
-            await fetch("/api/send-email/cancellation-confirmation", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                to: profile.email,
-                userName: profile.full_name || "Member",
-                className: selectedBooking.className,
-                date: selectedBooking.date,
-                time: selectedBooking.time,
-              }),
-            });
-          }
-        }
-      } catch (emailError) {
-        console.error("Failed to send cancellation email:", emailError);
-        // Don't block cancellation if email fails
-      }
-
-      // 4. Process waitlist - auto-book first eligible user
-      await processWaitlist(selectedBooking.id);
-
-      // Remove from list
-      setBookings((prev) => prev.filter((b) => b.id !== selectedBooking.id));
-      setSelectedBooking(null);
-      setShowComplete(true);
-    } catch (error) {
-      console.error("Error cancelling booking:", error);
-      alert("Failed to cancel booking. Please try again.");
-    } finally {
-      setCancelling(false);
+  const getStatusBadgeColor = (
+    status: "scheduled" | "delayed" | "cancelled",
+  ) => {
+    switch (status) {
+      case "scheduled":
+        return "bg-green-100 text-green-700";
+      case "delayed":
+        return "bg-yellow-100 text-yellow-700";
+      case "cancelled":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-gray-100 text-gray-700";
     }
   };
 
-  const processWaitlist = async (cancelledBookingId: string) => {
-    try {
-      // Get the class_id from the cancelled booking
-      const { data: cancelledBooking } = await supabase
-        .from("bookings")
-        .select("class_id, class:class_id(class_type)")
-        .eq("id", cancelledBookingId)
-        .single();
-
-      if (!cancelledBooking) return;
-
-      // Find first waitlisted user with auto_book enabled
-      const { data: waitlistEntries, error: waitlistError } = await supabase
-        .from("waitlist")
-        .select(
-          `
-          id,
-          user_id,
-          class_id,
-          package_id,
-          auto_book,
-          package:package_id (
-            id,
-            remaining_credits
-          )
-        `
-        )
-        .eq("class_id", cancelledBooking.class_id)
-        .eq("status", "waiting")
-        .eq("auto_book", true)
-        .not("package_id", "is", null)
-        .order("created_at", { ascending: true })
-        .limit(1);
-
-      if (waitlistError || !waitlistEntries || waitlistEntries.length === 0) {
-        console.log("No eligible waitlist entries for auto-booking");
-        return;
-      }
-
-      const waitlistEntry = waitlistEntries[0] as any;
-
-      // Create booking for waitlisted user
-      const { error: bookingError } = await supabase.from("bookings").insert({
-        user_id: waitlistEntry.user_id,
-        class_id: waitlistEntry.class_id,
-        package_id: waitlistEntry.package_id,
-        payment_method: "package_credit",
-        payment_status: "paid",
-        status: "confirmed",
-      });
-
-      if (bookingError) {
-        console.error("Error creating auto-booking:", bookingError);
-        return;
-      }
-
-      // Deduct package credit
-      if (waitlistEntry.package) {
-        await supabase
-          .from("packages")
-          .update({
-            remaining_credits: waitlistEntry.package.remaining_credits - 1,
-          })
-          .eq("id", waitlistEntry.package_id);
-      }
-
-      // Update waitlist status
-      await supabase
-        .from("waitlist")
-        .update({ status: "offered" })
-        .eq("id", waitlistEntry.id);
-
-      console.log("Successfully auto-booked waitlisted user");
-
-      // TODO: Send notification to user
-    } catch (error) {
-      console.error("Error processing waitlist:", error);
+  const getStatusText = (status: "scheduled" | "delayed" | "cancelled") => {
+    switch (status) {
+      case "scheduled":
+        return "On Time";
+      case "delayed":
+        return "Delayed";
+      case "cancelled":
+        return "Cancelled";
+      default:
+        return status;
     }
+  };
+
+  const handleReschedule = (booking: DisplayBooking) => {
+    // Navigate to reschedule page with locked filters
+    const params = new URLSearchParams({
+      bookingId: booking.id,
+      classType: booking.classType,
+      location: booking.location,
+      originalDate: booking.date,
+      originalTime: booking.time,
+      originalClass: booking.className,
+    });
+
+    router.push(`/reschedule?${params.toString()}`);
   };
 
   if (loading) {
@@ -364,18 +224,10 @@ export default function ManageBookingTab() {
         Upcoming Classes
       </h2>
 
-      {/* Legend */}
-      <div className="flex gap-6 text-sm mb-6">
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-green-500" /> Class On-time
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-yellow-400" /> Class Delayed
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-red-500" /> Class Cancelled
-        </div>
-      </div>
+      <p className="text-sm text-gray-600 mb-6">
+        Need to change your schedule? You can reschedule your booking up to 12
+        hours before the class starts.
+      </p>
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -385,30 +237,37 @@ export default function ManageBookingTab() {
               <th className="text-left px-4 py-3">Date</th>
               <th className="text-left px-4 py-3">Time</th>
               <th className="text-left px-4 py-3">Class</th>
+              <th className="text-left px-4 py-3">Location</th>
               <th className="text-left px-4 py-3">Coach</th>
-              <th className="text-left px-4 py-3">Package Used</th>
+              <th className="text-left px-4 py-3">Payment Method</th>
               <th className="text-left px-4 py-3">Status</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {bookings.map((b) => {
-              // Check if cancellation is allowed (1 hour before class)
+              // Check if reschedule is allowed (12 hours before class)
               const now = new Date();
               const hoursDiff =
                 (b.startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-              const canCancel = hoursDiff >= 1;
-              const minutesLeft = Math.floor(hoursDiff * 60);
+              const canReschedule = hoursDiff >= 12 && b.status !== "cancelled";
+              const hoursLeft = Math.floor(hoursDiff);
 
               return (
-                <tr key={b.id} className="border-b border-[#F7F4EF]">
-                  <td className="px-4 py-4">{b.date}</td>
-                  <td className="px-4 py-4">{b.time}</td>
-                  <td className="px-4 py-4">{b.className}</td>
-                  <td className="px-4 py-4 capitalize">{b.coach}</td>
-                  <td className="px-4 py-4">
+                <tr
+                  key={b.id}
+                  className="border-b border-[#F7F4EF] hover:bg-gray-50 transition"
+                >
+                  <td className="px-4 py-4 text-sm">{b.date}</td>
+                  <td className="px-4 py-4 text-sm">{b.time}</td>
+                  <td className="px-4 py-4 font-medium">{b.className}</td>
+                  <td className="px-4 py-4 text-sm">
+                    {b.location.replace("Aure Pilates Studio ", "")}
+                  </td>
+                  <td className="px-4 py-4 capitalize text-sm">{b.coach}</td>
+                  <td className="px-4 py-4 text-sm">
                     <span
-                      className={`text-sm ${
+                      className={`${
                         b.packageUsed === "Single Payment"
                           ? "text-gray-600"
                           : "text-[#2F3E55] font-medium"
@@ -419,33 +278,35 @@ export default function ManageBookingTab() {
                   </td>
                   <td className="px-4 py-4">
                     <span
-                      className={`inline-block w-3 h-3 rounded-full ${
-                        statusDot[b.status]
-                      }`}
-                    />
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(
+                        b.status,
+                      )}`}
+                    >
+                      {getStatusText(b.status)}
+                    </span>
                   </td>
                   <td className="px-4 py-4 text-right">
                     {b.status !== "cancelled" && (
                       <>
-                        {canCancel ? (
+                        {canReschedule ? (
                           <button
-                            onClick={() => setSelectedBooking(b)}
-                            className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:opacity-90"
+                            onClick={() => handleReschedule(b)}
+                            className="bg-[#2E3A4A] text-white px-4 py-2 rounded-lg text-sm hover:opacity-90 transition"
                           >
-                            Cancel Booking
+                            Reschedule
                           </button>
                         ) : (
                           <div className="text-right">
                             <button
                               disabled
                               className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg text-sm cursor-not-allowed"
-                              title="Cannot cancel within 1 hour of class start"
+                              title="Cannot reschedule within 12 hours of class start"
                             >
-                              Non-refundable
+                              No Changes
                             </button>
-                            {minutesLeft > 0 && (
+                            {hoursLeft > 0 && hoursLeft < 12 && (
                               <p className="text-xs text-gray-500 mt-1">
-                                Starts in {minutesLeft}min
+                                Starts in {hoursLeft}h
                               </p>
                             )}
                           </div>
@@ -461,22 +322,27 @@ export default function ManageBookingTab() {
       </div>
 
       {bookings.length === 0 && (
-        <p className="text-center text-sm text-gray-500 mt-6">
-          You have no upcoming bookings.
-        </p>
-      )}
-
-      {selectedBooking && (
-        <ConfirmCancelModal
-          booking={selectedBooking}
-          onClose={() => setSelectedBooking(null)}
-          onConfirm={confirmCancel}
-          isLoading={cancelling}
-        />
-      )}
-
-      {showComplete && (
-        <CancelCompleteModal onClose={() => setShowComplete(false)} />
+        <div className="text-center py-12">
+          <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
+            <svg
+              className="w-12 h-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 text-lg mb-2">No upcoming bookings</p>
+          <p className="text-gray-500 text-sm">
+            Your confirmed bookings will appear here
+          </p>
+        </div>
       )}
     </div>
   );

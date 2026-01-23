@@ -3,8 +3,10 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
-import { FiX, FiCheck, FiUser, FiPhone } from "react-icons/fi";
+import { FiUser } from "react-icons/fi";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
+import StudioRulesModal from "@/components/StudioRulesModal";
 
 type Package = {
   id: string;
@@ -23,6 +25,7 @@ type Attendee = {
 function BookingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, language } = useLanguage();
 
   // Get class info from URL params
   const classId = searchParams.get("classId");
@@ -46,7 +49,7 @@ function BookingPageContent() {
     { name: "", phone: "" },
   ]);
   const [paymentMethod, setPaymentMethod] = useState<"package" | "single">(
-    "package"
+    "package",
   );
   const [selectedPackage, setSelectedPackage] = useState<string>("");
   const [availablePackages, setAvailablePackages] = useState<Package[]>([]);
@@ -55,6 +58,12 @@ function BookingPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [usedMyDetails, setUsedMyDetails] = useState(false);
   const [showPackageDropdown, setShowPackageDropdown] = useState(false);
+
+  // Studio Rules state
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [hasAgreedToRules, setHasAgreedToRules] = useState(false);
+
+  const locale = language === "id" ? "id-ID" : "en-US";
 
   useEffect(() => {
     loadUserData();
@@ -85,8 +94,8 @@ function BookingPageContent() {
     if (!user) {
       router.push(
         `/login?redirect=${encodeURIComponent(
-          `/booking?${searchParams.toString()}`
-        )}`
+          `/booking?${searchParams.toString()}`,
+        )}`,
       );
       return;
     }
@@ -102,7 +111,8 @@ function BookingPageContent() {
 
     setUserProfile(profile);
 
-    // Get user's packages that match the class type
+    // Get user's packages that match the class type and haven't expired
+    const now = new Date().toISOString();
     const { data: packages } = await supabase
       .from("packages")
       .select(
@@ -113,12 +123,13 @@ function BookingPageContent() {
         package_type:package_type_id (
           category
         )
-      `
+      `,
       )
       .eq("user_id", user.id)
       .eq("status", "active")
       .gt("remaining_credits", 0)
-      .order("expires_at", { ascending: true }); // Closest to expiring first
+      .gt("expires_at", now) // Only include packages that haven't expired
+      .order("expires_at", { ascending: true });
 
     // Transform and filter packages that match class type
     const transformedPackages = (packages || []).map((pkg: any) => ({
@@ -131,7 +142,7 @@ function BookingPageContent() {
     }));
 
     const matchingPackages = transformedPackages.filter(
-      (pkg) => pkg.package_type?.category === classType
+      (pkg) => pkg.package_type?.category === classType,
     ) as Package[];
 
     setAvailablePackages(matchingPackages);
@@ -164,7 +175,7 @@ function BookingPageContent() {
   const handleAttendeeChange = (
     index: number,
     field: "name" | "phone",
-    value: string
+    value: string,
   ) => {
     setAttendees((prev) => {
       const updated = [...prev];
@@ -176,11 +187,15 @@ function BookingPageContent() {
   const validateAttendees = () => {
     for (let i = 0; i < attendees.length; i++) {
       if (!attendees[i].name.trim()) {
-        setError(`Please enter name for attendee ${i + 1}`);
+        setError(
+          t.booking.errorAttendeeName.replace("{number}", (i + 1).toString()),
+        );
         return false;
       }
       if (!attendees[i].phone.trim()) {
-        setError(`Please enter phone number for attendee ${i + 1}`);
+        setError(
+          t.booking.errorAttendeePhone.replace("{number}", (i + 1).toString()),
+        );
         return false;
       }
     }
@@ -188,15 +203,19 @@ function BookingPageContent() {
   };
 
   const handleBooking = async () => {
+    // Check if user has agreed to rules
+    if (!hasAgreedToRules) {
+      setShowRulesModal(true);
+      return;
+    }
+
     if (!validateAttendees()) return;
     if (paymentMethod === "package" && !selectedPackage) {
-      setError("Please select a package");
+      setError(t.booking.errorSelectPackage);
       return;
     }
     if (paymentMethod === "package" && !hasEnoughCredits) {
-      setError(
-        "Not enough credits in selected package. Please choose single payment or another package."
-      );
+      setError(t.booking.errorNotEnoughCredits);
       return;
     }
 
@@ -225,7 +244,7 @@ function BookingPageContent() {
 
         // Deduct credits from package
         const selectedPkg = availablePackages.find(
-          (p) => p.id === selectedPackage
+          (p) => p.id === selectedPackage,
         );
         if (selectedPkg) {
           const { error: packageError } = await supabase
@@ -296,7 +315,7 @@ function BookingPageContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-[#2F3E55]">Loading...</p>
+        <p className="text-[#2F3E55]">{t.booking.loading}</p>
       </div>
     );
   }
@@ -317,7 +336,6 @@ function BookingPageContent() {
   const hasEnoughCredits = selectedPkg
     ? selectedPkg.remaining_credits >= quantity
     : false;
-  const canUsePackage = paymentMethod === "package" && hasEnoughCredits;
 
   return (
     <div className="min-h-screen bg-[#F7F4EF] py-12">
@@ -328,10 +346,10 @@ function BookingPageContent() {
             onClick={() => router.back()}
             className="text-[#2E3A4A] hover:underline mb-4 flex items-center gap-2"
           >
-            ← Back to Schedule
+            ← {t.booking.backToSchedule}
           </button>
           <h1 className="text-4xl font-light text-[#2E3A4A]">
-            Book Your Class
+            {t.booking.title}
           </h1>
         </div>
 
@@ -345,16 +363,16 @@ function BookingPageContent() {
               </h2>
               <div className="space-y-2 text-[#2E3A4A]">
                 <p>
-                  <strong>Date:</strong> {classDate}
+                  <strong>{t.common.date}:</strong> {classDate}
                 </p>
                 <p>
-                  <strong>Time:</strong> {classTime}
+                  <strong>{t.common.time}:</strong> {classTime}
                 </p>
                 <p>
-                  <strong>Coach:</strong> {classCoach}
+                  <strong>{t.common.coach}:</strong> {classCoach}
                 </p>
                 <p>
-                  <strong>Location:</strong> {classLocation}
+                  <strong>{t.common.location}:</strong> {classLocation}
                 </p>
                 {hasDiscount && (
                   <div className="flex items-center gap-3 mt-4">
@@ -375,7 +393,7 @@ function BookingPageContent() {
             {/* Quantity Selector */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <label className="block text-lg font-medium text-[#2E3A4A] mb-4">
-                Number of Attendees
+                {t.booking.numberOfAttendees}
               </label>
               <div className="flex items-center gap-4">
                 <button
@@ -398,7 +416,7 @@ function BookingPageContent() {
                   +
                 </button>
                 <span className="text-sm text-gray-600 ml-2">
-                  (Max: {availableSpots} available)
+                  ({t.booking.max}: {availableSpots} {t.booking.available})
                 </span>
               </div>
             </div>
@@ -407,7 +425,7 @@ function BookingPageContent() {
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-[#2E3A4A]">
-                  Attendee Details
+                  {t.booking.attendeeDetails}
                 </h3>
                 {!usedMyDetails && (
                   <button
@@ -415,7 +433,7 @@ function BookingPageContent() {
                     className="text-sm text-[#2E3A4A] hover:underline flex items-center gap-2"
                   >
                     <FiUser size={16} />
-                    Use My Details
+                    {t.booking.useMyDetails}
                   </button>
                 )}
               </div>
@@ -427,12 +445,12 @@ function BookingPageContent() {
                     className="border-b border-gray-200 pb-6 last:border-0 last:pb-0"
                   >
                     <p className="text-sm font-medium text-gray-600 mb-3">
-                      Attendee {index + 1}
+                      {t.booking.attendee} {index + 1}
                     </p>
                     <div className="space-y-3">
                       <div>
                         <label className="block text-sm text-[#2E3A4A] mb-1">
-                          Full Name *
+                          {t.booking.fullName} *
                         </label>
                         <input
                           type="text"
@@ -440,13 +458,13 @@ function BookingPageContent() {
                           onChange={(e) =>
                             handleAttendeeChange(index, "name", e.target.value)
                           }
-                          placeholder="Enter full name"
+                          placeholder={t.booking.enterFullName}
                           className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
                         />
                       </div>
                       <div>
                         <label className="block text-sm text-[#2E3A4A] mb-1">
-                          Phone Number *
+                          {t.booking.phoneNumber} *
                         </label>
                         <input
                           type="tel"
@@ -454,7 +472,7 @@ function BookingPageContent() {
                           onChange={(e) =>
                             handleAttendeeChange(index, "phone", e.target.value)
                           }
-                          placeholder="08123456789"
+                          placeholder={t.booking.enterPhone}
                           className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
                         />
                       </div>
@@ -467,7 +485,7 @@ function BookingPageContent() {
             {/* Payment Method */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-medium text-[#2E3A4A] mb-4">
-                Payment Method
+                {t.booking.paymentMethod}
               </h3>
 
               {availablePackages.length > 0 ? (
@@ -483,10 +501,10 @@ function BookingPageContent() {
                     />
                     <div className="flex-1">
                       <p className="font-medium text-[#2E3A4A]">
-                        Use Package Credits
+                        {t.booking.usePackageCredits}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        Select from your available packages
+                        {t.booking.selectFromPackages}
                       </p>
 
                       {paymentMethod === "package" && (
@@ -506,14 +524,15 @@ function BookingPageContent() {
                                     {selectedPkg.package_type.category}
                                   </span>
                                   <span className="px-2 py-0.5 bg-[#B7C9E5] text-[#2E3A4A] text-xs rounded-full font-medium">
-                                    {selectedPkg.remaining_credits} credits
+                                    {selectedPkg.remaining_credits}{" "}
+                                    {t.booking.credits}
                                   </span>
                                 </div>
                                 <span className="text-xs text-gray-500">
-                                  Expires:{" "}
+                                  {t.booking.expires}:{" "}
                                   {new Date(
-                                    selectedPkg.expires_at
-                                  ).toLocaleDateString("en-US", {
+                                    selectedPkg.expires_at,
+                                  ).toLocaleDateString(locale, {
                                     day: "2-digit",
                                     month: "short",
                                     year: "numeric",
@@ -522,7 +541,7 @@ function BookingPageContent() {
                               </div>
                             ) : (
                               <span className="text-gray-500">
-                                Select a package
+                                {t.booking.selectPackage}
                               </span>
                             )}
                             <svg
@@ -549,7 +568,7 @@ function BookingPageContent() {
                                 const expiryDate = new Date(pkg.expires_at);
                                 const daysUntilExpiry = Math.ceil(
                                   (expiryDate.getTime() - Date.now()) /
-                                    (1000 * 60 * 60 * 24)
+                                    (1000 * 60 * 60 * 24),
                                 );
                                 const isExpiringSoon = daysUntilExpiry <= 7;
 
@@ -574,7 +593,8 @@ function BookingPageContent() {
                                             {pkg.package_type.category}
                                           </span>
                                           <span className="px-2 py-0.5 bg-[#B7C9E5] text-[#2E3A4A] text-xs rounded-full font-medium">
-                                            {pkg.remaining_credits} credits
+                                            {pkg.remaining_credits}{" "}
+                                            {t.booking.credits}
                                           </span>
                                         </div>
                                         <div className="flex items-center gap-2 text-xs">
@@ -585,19 +605,19 @@ function BookingPageContent() {
                                                 : "text-gray-500"
                                             }
                                           >
-                                            Expires:{" "}
+                                            {t.booking.expires}:{" "}
                                             {expiryDate.toLocaleDateString(
-                                              "en-US",
+                                              locale,
                                               {
                                                 day: "2-digit",
                                                 month: "short",
                                                 year: "numeric",
-                                              }
+                                              },
                                             )}
                                           </span>
                                           {isExpiringSoon && (
                                             <span className="px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
-                                              Expiring soon!
+                                              {t.booking.expiringSoon}
                                             </span>
                                           )}
                                         </div>
@@ -629,10 +649,12 @@ function BookingPageContent() {
                         selectedPkg && (
                           <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                             <p className="text-sm text-yellow-800">
-                              ⚠️ Not enough credits. You need {quantity} credits
-                              but only have {selectedPkg.remaining_credits}.
-                              Please choose single payment or select another
-                              package.
+                              {t.booking.notEnoughCredits
+                                .replace("{quantity}", quantity.toString())
+                                .replace(
+                                  "{remaining}",
+                                  selectedPkg.remaining_credits.toString(),
+                                )}
                             </p>
                           </div>
                         )}
@@ -650,10 +672,10 @@ function BookingPageContent() {
                     />
                     <div className="flex-1">
                       <p className="font-medium text-[#2E3A4A]">
-                        Single Payment
+                        {t.booking.singlePayment}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Pay with credit card, e-wallet, or bank transfer
+                        {t.booking.paymentDescription}
                       </p>
                     </div>
                   </label>
@@ -662,14 +684,13 @@ function BookingPageContent() {
                 <div className="space-y-4">
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
                     <p className="text-sm text-blue-800 mb-3">
-                      You don't have any active packages for this class type.
-                      Get a package to save more!
+                      {t.booking.noPackagesAvailable}
                     </p>
                     <Link
-                      href="/schedule#packages"
+                      href="/#packages"
                       className="inline-block bg-[#2E3A4A] text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-90 transition"
                     >
-                      Explore Packages
+                      {t.booking.explorePackages}
                     </Link>
                   </div>
 
@@ -684,10 +705,10 @@ function BookingPageContent() {
                     />
                     <div className="flex-1">
                       <p className="font-medium text-[#2E3A4A]">
-                        Single Payment
+                        {t.booking.singlePayment}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Pay with credit card, e-wallet, or bank transfer
+                        {t.booking.paymentDescription}
                       </p>
                     </div>
                   </label>
@@ -706,20 +727,22 @@ function BookingPageContent() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-24">
               <h3 className="text-lg font-medium text-[#2E3A4A] mb-4">
-                Booking Summary
+                {t.booking.bookingSummary}
               </h3>
 
               <div className="space-y-3 text-sm mb-6">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Class</span>
+                  <span className="text-gray-600">{t.common.class}</span>
                   <span className="font-medium text-right">{classTitle}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Attendees</span>
+                  <span className="text-gray-600">{t.booking.attendees}</span>
                   <span className="font-medium">{quantity}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Price per person</span>
+                  <span className="text-gray-600">
+                    {t.booking.pricePerPerson}
+                  </span>
                   <div className="text-right">
                     {hasDiscount && (
                       <div className="line-through text-gray-400 text-xs">
@@ -738,7 +761,9 @@ function BookingPageContent() {
 
                 <div className="border-t pt-3 mt-3">
                   <div className="flex justify-between items-baseline">
-                    <span className="font-semibold text-[#2E3A4A]">Total</span>
+                    <span className="font-semibold text-[#2E3A4A]">
+                      {t.booking.total}
+                    </span>
                     <div className="text-right">
                       {totalOriginalPrice &&
                         totalOriginalPrice > totalPrice && (
@@ -749,7 +774,9 @@ function BookingPageContent() {
                       <div className="text-2xl font-bold text-[#2E3A4A]">
                         {paymentMethod === "package"
                           ? `${quantity} ${
-                              quantity === 1 ? "credit" : "credits"
+                              quantity === 1
+                                ? t.booking.credit
+                                : t.booking.credits
                             }`
                           : `Rp.${totalPrice.toLocaleString("id-ID")}`}
                       </div>
@@ -767,20 +794,24 @@ function BookingPageContent() {
                 className="w-full bg-[#2E3A4A] text-white py-4 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processing
-                  ? "Processing..."
+                  ? t.booking.processing
                   : paymentMethod === "package"
-                  ? hasEnoughCredits
-                    ? "Confirm Booking"
-                    : "Not Enough Credits"
-                  : "Proceed to Payment"}
+                    ? hasEnoughCredits
+                      ? t.booking.confirmBooking
+                      : t.booking.errorNotEnoughCredits.split(".")[0]
+                    : t.booking.proceedToPayment}
               </button>
 
               {paymentMethod === "package" &&
                 selectedPackage &&
                 hasEnoughCredits && (
                   <p className="text-xs text-gray-500 mt-3 text-center">
-                    {quantity} {quantity === 1 ? "credit" : "credits"} will be
-                    deducted from your package
+                    {t.booking.creditsWillBeDeducted
+                      .replace("{quantity}", quantity.toString())
+                      .replace(
+                        "{unit}",
+                        quantity === 1 ? t.booking.credit : t.booking.credits,
+                      )}
                   </p>
                 )}
 
@@ -788,16 +819,35 @@ function BookingPageContent() {
                 !hasEnoughCredits &&
                 selectedPkg && (
                   <p className="text-xs text-red-500 mt-3 text-center">
-                    You need {quantity - selectedPkg.remaining_credits} more{" "}
-                    {quantity - selectedPkg.remaining_credits === 1
-                      ? "credit"
-                      : "credits"}
+                    {t.booking.needMoreCredits
+                      .replace(
+                        "{quantity}",
+                        (quantity - selectedPkg.remaining_credits).toString(),
+                      )
+                      .replace(
+                        "{unit}",
+                        quantity - selectedPkg.remaining_credits === 1
+                          ? t.booking.credit
+                          : t.booking.credits,
+                      )}
                   </p>
                 )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Studio Rules Modal */}
+      <StudioRulesModal
+        isOpen={showRulesModal}
+        onClose={() => setShowRulesModal(false)}
+        onAccept={() => {
+          setHasAgreedToRules(true);
+          setShowRulesModal(false);
+          // Automatically retry booking after rules accepted
+          setTimeout(() => handleBooking(), 100);
+        }}
+      />
     </div>
   );
 }
