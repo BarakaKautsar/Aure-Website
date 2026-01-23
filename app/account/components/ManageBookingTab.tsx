@@ -50,7 +50,7 @@ export default function ManageBookingTab() {
   const [bookings, setBookings] = useState<DisplayBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     loadBookings();
@@ -108,33 +108,31 @@ export default function ManageBookingTab() {
       return;
     }
 
-    // Filter out bookings with null classes and transform data for display
+    const locale = language === "id" ? "id-ID" : "en-US";
+
     const transformed = (data as unknown as BookingRow[])
       .filter((booking) => booking.class !== null)
       .map((booking) => {
         const startTime = new Date(booking.class.start_time);
         const endTime = new Date(booking.class.end_time);
 
-        // Format date
-        const dateStr = startTime.toLocaleDateString("en-US", {
+        const dateStr = startTime.toLocaleDateString(locale, {
           weekday: "short",
           day: "2-digit",
           month: "short",
           year: "numeric",
         });
 
-        // Format time
-        const timeStr = `${startTime.toLocaleTimeString("en-US", {
+        const timeStr = `${startTime.toLocaleTimeString(locale, {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
-        })}–${endTime.toLocaleTimeString("en-US", {
+        })}–${endTime.toLocaleTimeString(locale, {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
         })}`;
 
-        // Map class status to display status
         let displayStatus: "scheduled" | "delayed" | "cancelled" = "scheduled";
         if (booking.class.status === "cancelled") {
           displayStatus = "cancelled";
@@ -142,8 +140,7 @@ export default function ManageBookingTab() {
           displayStatus = "delayed";
         }
 
-        // Determine package used
-        let packageUsed = "Single Payment";
+        let packageUsed = t.account.manageBooking.singlePayment;
         if (booking.payment_method === "package_credit" && booking.package) {
           packageUsed = booking.package.package_type.name;
         }
@@ -186,18 +183,17 @@ export default function ManageBookingTab() {
   const getStatusText = (status: "scheduled" | "delayed" | "cancelled") => {
     switch (status) {
       case "scheduled":
-        return "On Time";
+        return t.account.manageBooking.onTime;
       case "delayed":
-        return "Delayed";
+        return t.account.manageBooking.delayed;
       case "cancelled":
-        return "Cancelled";
+        return t.account.manageBooking.cancelled;
       default:
         return status;
     }
   };
 
   const handleReschedule = (booking: DisplayBooking) => {
-    // Navigate to reschedule page with locked filters
     const params = new URLSearchParams({
       bookingId: booking.id,
       classType: booking.classType,
@@ -213,7 +209,7 @@ export default function ManageBookingTab() {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#2F3E55]">Loading your bookings...</p>
+        <p className="text-[#2F3E55]">{t.account.manageBooking.loading}</p>
       </div>
     );
   }
@@ -221,32 +217,31 @@ export default function ManageBookingTab() {
   return (
     <div>
       <h2 className="text-3xl font-light text-[#2F3E55] mb-4">
-        Upcoming Classes
+        {t.account.manageBooking.title}
       </h2>
 
       <p className="text-sm text-gray-600 mb-6">
-        Need to change your schedule? You can reschedule your booking up to 12
-        hours before the class starts.
+        {t.account.manageBooking.description}
       </p>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead className="bg-[#B7C9E5] text-[#2F3E55]">
             <tr>
-              <th className="text-left px-4 py-3">Date</th>
-              <th className="text-left px-4 py-3">Time</th>
-              <th className="text-left px-4 py-3">Class</th>
-              <th className="text-left px-4 py-3">Location</th>
-              <th className="text-left px-4 py-3">Coach</th>
-              <th className="text-left px-4 py-3">Payment Method</th>
-              <th className="text-left px-4 py-3">Status</th>
+              <th className="text-left px-4 py-3">{t.common.date}</th>
+              <th className="text-left px-4 py-3">{t.common.time}</th>
+              <th className="text-left px-4 py-3">{t.common.class}</th>
+              <th className="text-left px-4 py-3">{t.common.location}</th>
+              <th className="text-left px-4 py-3">{t.common.coach}</th>
+              <th className="text-left px-4 py-3">
+                {t.account.manageBooking.paymentMethod}
+              </th>
+              <th className="text-left px-4 py-3">{t.common.status}</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {bookings.map((b) => {
-              // Check if reschedule is allowed (12 hours before class)
               const now = new Date();
               const hoursDiff =
                 (b.startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -268,7 +263,7 @@ export default function ManageBookingTab() {
                   <td className="px-4 py-4 text-sm">
                     <span
                       className={`${
-                        b.packageUsed === "Single Payment"
+                        b.packageUsed === t.account.manageBooking.singlePayment
                           ? "text-gray-600"
                           : "text-[#2F3E55] font-medium"
                       }`}
@@ -293,20 +288,19 @@ export default function ManageBookingTab() {
                             onClick={() => handleReschedule(b)}
                             className="bg-[#2E3A4A] text-white px-4 py-2 rounded-lg text-sm hover:opacity-90 transition"
                           >
-                            Reschedule
+                            {t.account.manageBooking.reschedule}
                           </button>
                         ) : (
                           <div className="text-right">
                             <button
                               disabled
                               className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg text-sm cursor-not-allowed"
-                              title="Cannot reschedule within 12 hours of class start"
                             >
-                              No Changes
+                              {t.account.manageBooking.noChanges}
                             </button>
                             {hoursLeft > 0 && hoursLeft < 12 && (
                               <p className="text-xs text-gray-500 mt-1">
-                                Starts in {hoursLeft}h
+                                {t.account.manageBooking.startsIn} {hoursLeft}h
                               </p>
                             )}
                           </div>
@@ -338,9 +332,11 @@ export default function ManageBookingTab() {
               />
             </svg>
           </div>
-          <p className="text-gray-600 text-lg mb-2">No upcoming bookings</p>
+          <p className="text-gray-600 text-lg mb-2">
+            {t.account.manageBooking.noBookings}
+          </p>
           <p className="text-gray-500 text-sm">
-            Your confirmed bookings will appear here
+            {t.account.manageBooking.noBookingsDesc}
           </p>
         </div>
       )}

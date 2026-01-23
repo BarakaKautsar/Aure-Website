@@ -39,7 +39,7 @@ type DisplayHistory = {
 export default function BookingHistoryTab() {
   const [history, setHistory] = useState<DisplayHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     loadHistory();
@@ -59,9 +59,6 @@ export default function BookingHistoryTab() {
 
     const now = new Date();
 
-    // Get all bookings where:
-    // 1. Status is completed, cancelled, or no_show
-    // 2. Status is scheduled/confirmed BUT the class end_time has passed
     const { data, error } = await supabase
       .from("bookings")
       .select(
@@ -94,19 +91,18 @@ export default function BookingHistoryTab() {
       return;
     }
 
-    // Filter and transform data for display
+    const locale = language === "id" ? "id-ID" : "en-US";
+
     const transformed = (data as unknown as BookingHistoryRow[])
       .filter((booking) => {
         if (!booking.class) return false;
 
         const classEndTime = new Date(booking.class.end_time);
 
-        // Include if status is already completed, cancelled, or no_show
         if (["completed", "cancelled", "no_show"].includes(booking.status)) {
           return true;
         }
 
-        // Include if status is scheduled/confirmed but class has ended
         if (
           ["scheduled", "confirmed"].includes(booking.status) &&
           classEndTime < now
@@ -120,47 +116,42 @@ export default function BookingHistoryTab() {
         const startTime = new Date(booking.class.start_time);
         const endTime = new Date(booking.class.end_time);
 
-        // Format date
-        const dateStr = startTime.toLocaleDateString("en-US", {
+        const dateStr = startTime.toLocaleDateString(locale, {
           weekday: "short",
           day: "2-digit",
           month: "short",
           year: "numeric",
         });
 
-        // Format time
-        const timeStr = `${startTime.toLocaleTimeString("en-US", {
+        const timeStr = `${startTime.toLocaleTimeString(locale, {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
-        })}–${endTime.toLocaleTimeString("en-US", {
+        })}–${endTime.toLocaleTimeString(locale, {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
         })}`;
 
-        // Determine package used
         let packageUsed = "-";
         if (booking.payment_method === "package_credit" && booking.package) {
           packageUsed = booking.package.package_type.name;
         } else if (booking.payment_method === "single_payment") {
-          packageUsed = "Single Payment";
+          packageUsed = t.account.manageBooking.singlePayment;
         }
 
-        // Determine display status
         let statusBadge: "completed" | "cancelled" | "no-show";
         let statusText: string;
 
         if (booking.status === "cancelled") {
           statusBadge = "cancelled";
-          statusText = "Cancelled";
+          statusText = t.account.bookingHistory.cancelled;
         } else if (booking.status === "no_show") {
           statusBadge = "no-show";
-          statusText = "No Show";
+          statusText = t.account.bookingHistory.noShow;
         } else {
-          // For scheduled/confirmed that have ended, or status is completed
           statusBadge = "completed";
-          statusText = "Completed";
+          statusText = t.account.bookingHistory.completed;
         }
 
         return {
@@ -198,7 +189,7 @@ export default function BookingHistoryTab() {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#2F3E55]">Loading your booking history...</p>
+        <p className="text-[#2F3E55]">{t.account.bookingHistory.loading}</p>
       </div>
     );
   }
@@ -206,20 +197,22 @@ export default function BookingHistoryTab() {
   return (
     <div>
       <h2 className="text-3xl font-light text-[#2F3E55] mb-6">
-        Booking History
+        {t.account.bookingHistory.title}
       </h2>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead className="bg-[#B7C9E5] text-[#2F3E55]">
             <tr>
-              <th className="text-left px-4 py-3">Date</th>
-              <th className="text-left px-4 py-3">Time</th>
-              <th className="text-left px-4 py-3">Class</th>
-              <th className="text-left px-4 py-3">Location</th>
-              <th className="text-left px-4 py-3">Coach</th>
-              <th className="text-left px-4 py-3">Payment Method</th>
-              <th className="text-left px-4 py-3">Status</th>
+              <th className="text-left px-4 py-3">{t.common.date}</th>
+              <th className="text-left px-4 py-3">{t.common.time}</th>
+              <th className="text-left px-4 py-3">{t.common.class}</th>
+              <th className="text-left px-4 py-3">{t.common.location}</th>
+              <th className="text-left px-4 py-3">{t.common.coach}</th>
+              <th className="text-left px-4 py-3">
+                {t.account.manageBooking.paymentMethod}
+              </th>
+              <th className="text-left px-4 py-3">{t.common.status}</th>
             </tr>
           </thead>
           <tbody>
@@ -268,9 +261,11 @@ export default function BookingHistoryTab() {
               />
             </svg>
           </div>
-          <p className="text-gray-600 text-lg mb-2">No booking history yet</p>
+          <p className="text-gray-600 text-lg mb-2">
+            {t.account.bookingHistory.noHistory}
+          </p>
           <p className="text-gray-500 text-sm">
-            Your past bookings will appear here after you attend classes
+            {t.account.bookingHistory.noHistoryDesc}
           </p>
         </div>
       )}

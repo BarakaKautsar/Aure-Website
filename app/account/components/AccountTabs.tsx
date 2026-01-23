@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-
-const tabs = [
-  { label: "Profile", value: "profile" },
-  { label: "Manage Booking", value: "manage-booking" },
-  { label: "Booking History", value: "history" },
-  { label: "Active Packages", value: "packages" },
-];
+import { useLanguage } from "@/lib/i18n";
 
 export default function AccountTabs({ activeTab }: { activeTab: string }) {
+  const { t } = useLanguage();
+
+  const tabs = [
+    { label: t.account.tabs.profile, value: "profile" },
+    { label: t.account.tabs.manageBooking, value: "manage-booking" },
+    { label: t.account.tabs.history, value: "history" },
+    { label: t.account.tabs.packages, value: "packages" },
+  ];
+
   return (
     <div className="flex flex-wrap gap-4 justify-center">
       {tabs.map((tab) => {

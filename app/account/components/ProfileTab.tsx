@@ -5,6 +5,7 @@ import { FiEdit2, FiLogOut } from "react-icons/fi";
 import { supabase } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n";
 import EditProfileModal from "./EditProfileModal";
 
 type Profile = {
@@ -16,6 +17,7 @@ type Profile = {
 
 export default function ProfileTab() {
   const router = useRouter();
+  const { t, language } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +61,8 @@ export default function ProfileTab() {
     if (!dateString) return "—";
 
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    const locale = language === "id" ? "id-ID" : "en-US";
+    return date.toLocaleDateString(locale, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -67,11 +70,11 @@ export default function ProfileTab() {
   };
 
   if (loading) {
-    return <p className="text-[#2F3E55]">Loading profile...</p>;
+    return <p className="text-[#2F3E55]">{t.account.profile.loading}</p>;
   }
 
   if (!user) {
-    return <p className="text-red-500">User not found.</p>;
+    return <p className="text-red-500">{t.account.profile.userNotFound}</p>;
   }
 
   const isProfileIncomplete =
@@ -85,44 +88,48 @@ export default function ProfileTab() {
       {isProfileIncomplete && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-yellow-800">
-            <strong>⚠️ Profile Incomplete:</strong> Please complete your profile
-            to ensure smooth booking experience.
+            <strong>⚠️</strong> {t.account.profile.incompleteWarning}
           </p>
         </div>
       )}
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4 text-[#2F3E55]">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Name */}
           <div>
-            <p className="text-sm text-gray-500 mb-1">Full Name</p>
+            <p className="text-sm text-gray-500 mb-1">
+              {t.account.profile.fullName}
+            </p>
             <p className="font-medium">{profile?.full_name || "—"}</p>
           </div>
 
-          {/* Email */}
           <div>
-            <p className="text-sm text-gray-500 mb-1">Email</p>
+            <p className="text-sm text-gray-500 mb-1">
+              {t.account.profile.email}
+            </p>
             <p className="font-medium">{user.email}</p>
           </div>
 
-          {/* Phone */}
           <div>
-            <p className="text-sm text-gray-500 mb-1">Phone Number</p>
+            <p className="text-sm text-gray-500 mb-1">
+              {t.account.profile.phoneNumber}
+            </p>
             <p className="font-medium">{profile?.phone_number || "—"}</p>
           </div>
 
-          {/* Date of Birth */}
           <div>
-            <p className="text-sm text-gray-500 mb-1">Date of Birth</p>
+            <p className="text-sm text-gray-500 mb-1">
+              {t.account.profile.dateOfBirth}
+            </p>
             <p className="font-medium">
               {formatDate(profile?.date_of_birth ?? null)}
             </p>
           </div>
         </div>
 
-        {/* Address - Full Width */}
         <div>
-          <p className="text-sm text-gray-500 mb-1">Address</p>
+          <p className="text-sm text-gray-500 mb-1">
+            {t.account.profile.address}
+          </p>
           <p className="font-medium whitespace-pre-line">
             {profile?.address || "—"}
           </p>
@@ -134,14 +141,14 @@ export default function ProfileTab() {
           onClick={() => setEditOpen(true)}
           className="flex items-center gap-2 bg-[#F7F4EF] px-5 py-3 rounded-xl hover:opacity-90 transition"
         >
-          <FiEdit2 /> Edit Profile
+          <FiEdit2 /> {t.account.profile.editProfile}
         </button>
 
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 bg-red-500 text-white px-5 py-3 rounded-xl hover:opacity-90 transition"
         >
-          <FiLogOut /> Log Out
+          <FiLogOut /> {t.account.profile.logOut}
         </button>
       </div>
 

@@ -4,12 +4,11 @@ import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FcGoogle } from "react-icons/fc";
+import { useLanguage } from "@/lib/i18n";
 
 export default function SignupPage() {
   const router = useRouter();
-
-  const isPasswordValid = (password: string) => password.length >= 6;
+  const { t } = useLanguage();
 
   const [form, setForm] = useState({
     name: "",
@@ -31,20 +30,19 @@ export default function SignupPage() {
     form.confirmPassword.length > 0 &&
     form.password === form.confirmPassword;
 
-  // Validation
   const nameError =
-    form.name.trim().length < 2
-      ? "Full name must be at least 2 characters"
+    form.name.trim().length > 0 && form.name.trim().length < 2
+      ? t.signup.errors.nameTooShort
       : null;
 
   const emailError =
     form.email.length > 0 && !form.email.includes("@")
-      ? "Invalid email address"
+      ? t.signup.errors.invalidEmail
       : null;
 
   const phoneError =
     form.phone.length > 0 && !/^[0-9+\s-]+$/.test(form.phone)
-      ? "Invalid phone number"
+      ? t.signup.errors.invalidPhone
       : null;
 
   const dobError =
@@ -53,29 +51,27 @@ export default function SignupPage() {
           const dob = new Date(form.dateOfBirth);
           const today = new Date();
           const age = today.getFullYear() - dob.getFullYear();
-
-          if (isNaN(dob.getTime())) return "Invalid date";
-          if (dob > today) return "Date cannot be in the future";
-          if (age < 13) return "You must be at least 13 years old";
-          if (age > 120) return "Please enter a valid date of birth";
-
+          if (isNaN(dob.getTime())) return t.signup.errors.invalidDate;
+          if (dob > today) return t.signup.errors.dateFuture;
+          if (age < 13) return t.signup.errors.ageMinimum;
+          if (age > 120) return t.signup.errors.ageMaximum;
           return null;
         })()
       : null;
 
   const addressError =
     form.address.trim().length > 0 && form.address.trim().length < 10
-      ? "Address must be at least 10 characters"
+      ? t.signup.errors.addressTooShort
       : null;
 
   const passwordError =
     form.password.length > 0 && form.password.length < 6
-      ? "Password must be at least 6 characters"
+      ? t.signup.errors.passwordTooShort
       : null;
 
   const confirmPasswordError =
     form.confirmPassword.length > 0 && !passwordsMatch
-      ? "Passwords do not match"
+      ? t.signup.passwordsNoMatch
       : null;
 
   const canSubmit =
@@ -99,7 +95,7 @@ export default function SignupPage() {
     "w-full border border-[#D1D5DB] rounded-xl px-4 py-3 bg-white text-[#2F3E55] focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]";
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -109,30 +105,28 @@ export default function SignupPage() {
     setStatus("loading");
     setErrorMessage(null);
 
-    if (!isPasswordValid(form.password)) {
-      setErrorMessage("Password must be at least 6 characters");
+    if (form.password.length < 6) {
+      setErrorMessage(t.signup.errors.passwordTooShort);
       setStatus("error");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setErrorMessage("Passwords do not match");
+      setErrorMessage(t.signup.passwordsNoMatch);
       setStatus("error");
       return;
     }
 
-    // Validate DOB
     const dob = new Date(form.dateOfBirth);
     const today = new Date();
     const age = today.getFullYear() - dob.getFullYear();
 
     if (age < 13) {
-      setErrorMessage("You must be at least 13 years old to sign up");
+      setErrorMessage(t.signup.errors.ageMinimum);
       setStatus("error");
       return;
     }
 
-    // 1. Create auth user
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -146,12 +140,11 @@ export default function SignupPage() {
 
     if (error || !data.user) {
       console.error(error);
-      setErrorMessage(error?.message || "Failed to create account");
+      setErrorMessage(error?.message || t.signup.errors.failedToCreate);
       setStatus("error");
       return;
     }
 
-    // 2. Update profile with all data including DOB and address
     const { error: profileError } = await supabase
       .from("profiles")
       .update({
@@ -165,12 +158,11 @@ export default function SignupPage() {
 
     if (profileError) {
       console.error(profileError);
-      setErrorMessage("Failed to save profile information");
+      setErrorMessage(t.signup.errors.failedToSaveProfile);
       setStatus("error");
       return;
     }
 
-    // 3. Send welcome email
     try {
       await fetch("/api/send-email/welcome", {
         method: "POST",
@@ -182,71 +174,32 @@ export default function SignupPage() {
       });
     } catch (emailError) {
       console.error("Failed to send welcome email:", emailError);
-      // Don't block signup if email fails
     }
 
-    // 4. Redirect to login
     router.push("/login");
-  };
-
-  const handleGoogleSignUp = async () => {
-    setStatus("loading");
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect=/`,
-      },
-    });
-
-    if (error) {
-      console.error(error);
-      setErrorMessage(error.message);
-      setStatus("error");
-    }
-    // If successful, user will be redirected to Google
   };
 
   return (
     <main className="min-h-screen relative flex items-center justify-center py-12">
-      {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/images/login.jpg')" }}
       />
       <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
 
-      {/* Signup Card */}
       <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-lg p-10 my-8">
         <h1 className="text-4xl font-light text-center text-[#2F3E55] mb-8">
-          Sign Up
+          {t.signup.title}
         </h1>
 
-        {/* Google Sign Up Button - First */}
-        <button
-          onClick={handleGoogleSignUp}
-          disabled={status === "loading"}
-          className="w-full border rounded-xl py-3 flex items-center justify-center gap-3 hover:bg-gray-50 disabled:opacity-60 transition mb-6"
-        >
-          <FcGoogle size={20} />
-          Continue with Google
-        </button>
-
-        <div className="flex items-center gap-4 mb-6">
-          <div className="h-px bg-gray-200 flex-1" />
-          <span className="text-sm text-gray-400">or</span>
-          <div className="h-px bg-gray-200 flex-1" />
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Full Name */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Full Name *
+              {t.signup.fullName} *
             </label>
             <input
               name="name"
-              placeholder="Full Name"
+              placeholder={t.signup.fullName}
               value={form.name}
               onChange={handleChange}
               className={`${inputBase} ${
@@ -259,13 +212,14 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Email */}
           <div>
-            <label className="block text-sm mb-1 text-[#2F3E55]">Email *</label>
+            <label className="block text-sm mb-1 text-[#2F3E55]">
+              {t.signup.email} *
+            </label>
             <input
               type="email"
               name="email"
-              placeholder="Email"
+              placeholder={t.signup.email}
               value={form.email}
               onChange={handleChange}
               className={`${inputBase} ${
@@ -278,14 +232,13 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Phone */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Phone Number *
+              {t.signup.phoneNumber} *
             </label>
             <input
               name="phone"
-              placeholder="Phone Number"
+              placeholder={t.signup.phoneNumber}
               value={form.phone}
               onChange={handleChange}
               className={`${inputBase} ${
@@ -298,10 +251,9 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Date of Birth */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Date of Birth *
+              {t.signup.dateOfBirth} *
             </label>
             <input
               type="date"
@@ -319,14 +271,13 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Address */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Address *
+              {t.signup.address} *
             </label>
             <textarea
               name="address"
-              placeholder="Full Address"
+              placeholder={t.signup.addressPlaceholder}
               value={form.address}
               onChange={handleChange}
               rows={3}
@@ -340,16 +291,15 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Password with Show/Hide */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Password *
+              {t.signup.password} *
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                placeholder="Password (min. 6 characters)"
+                placeholder={t.signup.passwordPlaceholder}
                 value={form.password}
                 onChange={handleChange}
                 className={`${inputBase} pr-12 ${
@@ -364,7 +314,7 @@ export default function SignupPage() {
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? t.signup.hide : t.signup.show}
               </button>
             </div>
             {passwordError && form.password.length > 0 && (
@@ -372,16 +322,15 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Confirm Password with Show/Hide */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Confirm Password *
+              {t.signup.confirmPassword} *
             </label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
-                placeholder="Retype Password"
+                placeholder={t.signup.retypePassword}
                 value={form.confirmPassword}
                 onChange={handleChange}
                 className={`${inputBase} pr-12 ${
@@ -396,7 +345,7 @@ export default function SignupPage() {
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#2F3E55] hover:opacity-70"
               >
-                {showConfirmPassword ? "Hide" : "Show"}
+                {showConfirmPassword ? t.signup.hide : t.signup.show}
               </button>
             </div>
             {form.confirmPassword.length > 0 && (
@@ -406,8 +355,8 @@ export default function SignupPage() {
                 }`}
               >
                 {passwordsMatch
-                  ? "✓ Passwords match"
-                  : "✗ Passwords do not match"}
+                  ? `✓ ${t.signup.passwordsMatch}`
+                  : `✗ ${t.signup.passwordsNoMatch}`}
               </p>
             )}
           </div>
@@ -427,14 +376,16 @@ export default function SignupPage() {
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >
-            {status === "loading" ? "Creating account…" : "Create Account"}
+            {status === "loading"
+              ? t.signup.creatingAccount
+              : t.signup.createAccount}
           </button>
         </form>
 
         <p className="text-center text-sm text-[#2F3E55] mt-6">
-          Already have an account?{" "}
+          {t.signup.alreadyHaveAccount}{" "}
           <Link href="/login" className="underline">
-            Login
+            {t.signup.loginLink}
           </Link>
         </p>
       </div>

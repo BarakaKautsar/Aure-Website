@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent">("idle");
+  const { t } = useLanguage();
 
   const inputBase =
     "w-full border border-[#D1D5DB] rounded-xl px-4 py-3 bg-white text-[#2F3E55] focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]";
@@ -22,34 +24,31 @@ export default function ForgotPasswordPage() {
 
   return (
     <main className="min-h-screen relative flex items-center justify-center">
-      {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/images/login.jpg')" }}
       />
       <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
 
-      {/* Card */}
       <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-lg p-10">
         <h1 className="text-4xl font-light text-center text-[#2F3E55] mb-4">
-          Forgot Password
+          {t.forgotPassword.title}
         </h1>
 
         {status === "sent" ? (
           <p className="text-center text-[#2F3E55]">
-            If an account exists for <strong>{email}</strong>, you’ll receive an
-            email with instructions to reset your password.
+            {t.forgotPassword.sentMessage} <strong>{email}</strong>
+            {t.forgotPassword.sentMessageEnd}
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <p className="text-sm text-[#2F3E55] text-center">
-              Enter your email address and we’ll send you instructions to reset
-              your password.
+              {t.forgotPassword.description}
             </p>
 
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t.forgotPassword.emailPlaceholder}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={inputBase}
@@ -61,14 +60,16 @@ export default function ForgotPasswordPage() {
               disabled={status === "loading"}
               className="w-full bg-[#2F3E55] text-white py-3 rounded-xl hover:opacity-90 transition disabled:opacity-60"
             >
-              {status === "loading" ? "Sending…" : "Send reset link"}
+              {status === "loading"
+                ? t.forgotPassword.sending
+                : t.forgotPassword.sendButton}
             </button>
           </form>
         )}
 
         <p className="text-center text-sm text-[#2F3E55] mt-6">
           <Link href="/login" className="underline">
-            Back to login
+            {t.forgotPassword.backToLogin}
           </Link>
         </p>
       </div>

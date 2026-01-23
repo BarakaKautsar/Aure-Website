@@ -127,7 +127,6 @@ export const translations = {
     // Footer
     footer: {
       contactUs: "Contact Us",
-      generalContact: "General Contact",
       copyright: "Copyrights © 2025 All Rights Reserved by Aure Pilates Studio",
     },
 
@@ -217,6 +216,153 @@ export const translations = {
       studioRules: "Studio Rules & Policies",
       readRules: "Please read and agree to our studio rules before booking",
       viewRules: "View Studio Rules",
+    },
+
+    // Account Section
+    account: {
+      title: "My Aure Account",
+      tabs: {
+        profile: "Profile",
+        manageBooking: "Manage Booking",
+        history: "Booking History",
+        packages: "Active Packages",
+      },
+      profile: {
+        fullName: "Full Name",
+        email: "Email",
+        phoneNumber: "Phone Number",
+        dateOfBirth: "Date of Birth",
+        address: "Address",
+        editProfile: "Edit Profile",
+        logOut: "Log Out",
+        loading: "Loading profile...",
+        userNotFound: "User not found.",
+        incompleteWarning:
+          "Profile Incomplete: Please complete your profile to ensure smooth booking experience.",
+      },
+      editProfile: {
+        title: "Edit Profile",
+        fullNameRequired: "Full name is required",
+        fullNameTooShort: "Full name is too short",
+        invalidPhone: "Invalid phone number",
+        invalidDate: "Invalid date",
+        dateFuture: "Date cannot be in the future",
+        ageMinimum: "You must be at least 13 years old",
+        ageMaximum: "Please enter a valid date of birth",
+        addressTooShort: "Address must be at least 10 characters",
+        saving: "Saving...",
+      },
+      manageBooking: {
+        title: "Upcoming Classes",
+        description:
+          "Need to change your schedule? You can reschedule your booking up to 12 hours before the class starts.",
+        noBookings: "No upcoming bookings",
+        noBookingsDesc: "Your confirmed bookings will appear here",
+        reschedule: "Reschedule",
+        noChanges: "No Changes",
+        startsIn: "Starts in",
+        paymentMethod: "Payment Method",
+        singlePayment: "Single Payment",
+        onTime: "On Time",
+        delayed: "Delayed",
+        cancelled: "Cancelled",
+        loading: "Loading your bookings...",
+      },
+      bookingHistory: {
+        title: "Booking History",
+        noHistory: "No booking history yet",
+        noHistoryDesc:
+          "Your past bookings will appear here after you attend classes",
+        completed: "Completed",
+        cancelled: "Cancelled",
+        noShow: "No Show",
+        loading: "Loading your booking history...",
+      },
+      activePackages: {
+        title: "Active Packages",
+        pastPackages: "Past Packages",
+        noActivePackages: "No active packages",
+        noActivePackagesDesc: "Purchase a package to start saving on classes",
+        browsePackages: "Browse Packages",
+        active: "Active",
+        expiringSoon: "Expiring Soon",
+        expired: "Expired",
+        completed: "Completed",
+        remaining: "Remaining",
+        used: "Used",
+        progress: "Progress",
+        purchased: "Purchased",
+        expires: "Expires",
+        daysLeft: "d left",
+        classesLabel: "classes",
+        validityDays: "days validity",
+        loading: "Loading your packages...",
+      },
+    },
+
+    // Login Page
+    login: {
+      title: "Login",
+      email: "Email",
+      password: "Password",
+      rememberMe: "Remember me",
+      forgotPassword: "Forgot password?",
+      loginButton: "Login",
+      loggingIn: "Logging in…",
+      noAccount: "Don't have an account?",
+      signUp: "Sign up",
+      show: "Show",
+      hide: "Hide",
+    },
+
+    // Signup Page
+    signup: {
+      title: "Sign Up",
+      fullName: "Full Name",
+      email: "Email",
+      phoneNumber: "Phone Number",
+      dateOfBirth: "Date of Birth",
+      address: "Address",
+      addressPlaceholder: "Full Address",
+      password: "Password",
+      passwordPlaceholder: "Password (min. 6 characters)",
+      confirmPassword: "Confirm Password",
+      retypePassword: "Retype Password",
+      passwordsMatch: "Passwords match",
+      passwordsNoMatch: "Passwords do not match",
+      createAccount: "Create Account",
+      creatingAccount: "Creating account…",
+      alreadyHaveAccount: "Already have an account?",
+      loginLink: "Login",
+      show: "Show",
+      hide: "Hide",
+      errors: {
+        nameTooShort: "Full name must be at least 2 characters",
+        invalidEmail: "Invalid email address",
+        invalidPhone: "Invalid phone number",
+        invalidDate: "Invalid date",
+        dateFuture: "Date cannot be in the future",
+        ageMinimum: "You must be at least 13 years old",
+        ageMaximum: "Please enter a valid date of birth",
+        addressTooShort: "Address must be at least 10 characters",
+        passwordTooShort: "Password must be at least 6 characters",
+        failedToCreate: "Failed to create account",
+        failedToSaveProfile: "Failed to save profile information",
+      },
+    },
+
+    // Forgot Password Page
+    forgotPassword: {
+      title: "Forgot Password",
+      description:
+        "Enter your email address and we'll send you instructions to reset your password.",
+      emailPlaceholder: "Email",
+      sendButton: "Send reset link",
+      sending: "Sending…",
+      sentMessage: "If an account exists for",
+      sentMessageEnd:
+        ", you'll receive an email with instructions to reset your password.",
+      backToLogin: "Back to login",
     },
 
     // Common
@@ -365,7 +511,6 @@ export const translations = {
     // Footer
     footer: {
       contactUs: "Hubungi Kami",
-      generalContact: "Kontak Umum",
       copyright:
         "Hak Cipta © 2025 Seluruh Hak Dilindungi oleh Aure Pilates Studio",
     },
@@ -407,7 +552,6 @@ export const translations = {
       failedToJoin: "Gagal bergabung daftar tunggu. Silakan coba lagi.",
       pleaseLogin: "Silakan masuk untuk bergabung daftar tunggu",
     },
-
     // Booking Page
     booking: {
       title: "Pesan Kelas Anda",
@@ -460,6 +604,153 @@ export const translations = {
       viewRules: "Lihat Peraturan Studio",
     },
 
+    // Account Section
+    account: {
+      title: "Akun Aure Saya",
+      tabs: {
+        profile: "Profil",
+        manageBooking: "Kelola Pemesanan",
+        history: "Riwayat Pemesanan",
+        packages: "Paket Aktif",
+      },
+      profile: {
+        fullName: "Nama Lengkap",
+        email: "Email",
+        phoneNumber: "Nomor Telepon",
+        dateOfBirth: "Tanggal Lahir",
+        address: "Alamat",
+        editProfile: "Edit Profil",
+        logOut: "Keluar",
+        loading: "Memuat profil...",
+        userNotFound: "Pengguna tidak ditemukan.",
+        incompleteWarning:
+          "Profil Belum Lengkap: Harap lengkapi profil Anda untuk memastikan pengalaman pemesanan yang lancar.",
+      },
+      editProfile: {
+        title: "Edit Profil",
+        fullNameRequired: "Nama lengkap wajib diisi",
+        fullNameTooShort: "Nama lengkap terlalu pendek",
+        invalidPhone: "Nomor telepon tidak valid",
+        invalidDate: "Tanggal tidak valid",
+        dateFuture: "Tanggal tidak boleh di masa depan",
+        ageMinimum: "Anda harus berusia minimal 13 tahun",
+        ageMaximum: "Harap masukkan tanggal lahir yang valid",
+        addressTooShort: "Alamat harus minimal 10 karakter",
+        saving: "Menyimpan...",
+      },
+      manageBooking: {
+        title: "Kelas Mendatang",
+        description:
+          "Perlu mengubah jadwal? Anda dapat menjadwal ulang pemesanan hingga 12 jam sebelum kelas dimulai.",
+        noBookings: "Tidak ada pemesanan mendatang",
+        noBookingsDesc: "Pemesanan yang dikonfirmasi akan muncul di sini",
+        reschedule: "Jadwal Ulang",
+        noChanges: "Tidak Bisa Diubah",
+        startsIn: "Dimulai dalam",
+        paymentMethod: "Metode Pembayaran",
+        singlePayment: "Pembayaran Tunggal",
+        onTime: "Tepat Waktu",
+        delayed: "Tertunda",
+        cancelled: "Dibatalkan",
+        loading: "Memuat pemesanan Anda...",
+      },
+      bookingHistory: {
+        title: "Riwayat Pemesanan",
+        noHistory: "Belum ada riwayat pemesanan",
+        noHistoryDesc:
+          "Pemesanan sebelumnya akan muncul di sini setelah Anda menghadiri kelas",
+        completed: "Selesai",
+        cancelled: "Dibatalkan",
+        noShow: "Tidak Hadir",
+        loading: "Memuat riwayat pemesanan Anda...",
+      },
+      activePackages: {
+        title: "Paket Aktif",
+        pastPackages: "Paket Sebelumnya",
+        noActivePackages: "Tidak ada paket aktif",
+        noActivePackagesDesc: "Beli paket untuk mulai menghemat biaya kelas",
+        browsePackages: "Lihat Paket",
+        active: "Aktif",
+        expiringSoon: "Segera Kedaluwarsa",
+        expired: "Kedaluwarsa",
+        completed: "Selesai",
+        remaining: "Tersisa",
+        used: "Terpakai",
+        progress: "Progres",
+        purchased: "Dibeli",
+        expires: "Kedaluwarsa",
+        daysLeft: "h tersisa",
+        classesLabel: "kelas",
+        validityDays: "hari berlaku",
+        loading: "Memuat paket Anda...",
+      },
+    },
+
+    // Login Page
+    login: {
+      title: "Masuk",
+      email: "Email",
+      password: "Kata Sandi",
+      rememberMe: "Ingat saya",
+      forgotPassword: "Lupa kata sandi?",
+      loginButton: "Masuk",
+      loggingIn: "Sedang masuk…",
+      noAccount: "Belum punya akun?",
+      signUp: "Daftar",
+      show: "Tampilkan",
+      hide: "Sembunyikan",
+    },
+
+    // Signup Page
+    signup: {
+      title: "Daftar",
+      fullName: "Nama Lengkap",
+      email: "Email",
+      phoneNumber: "Nomor Telepon",
+      dateOfBirth: "Tanggal Lahir",
+      address: "Alamat",
+      addressPlaceholder: "Alamat Lengkap",
+      password: "Kata Sandi",
+      passwordPlaceholder: "Kata Sandi (min. 6 karakter)",
+      confirmPassword: "Konfirmasi Kata Sandi",
+      retypePassword: "Ketik Ulang Kata Sandi",
+      passwordsMatch: "Kata sandi cocok",
+      passwordsNoMatch: "Kata sandi tidak cocok",
+      createAccount: "Buat Akun",
+      creatingAccount: "Membuat akun…",
+      alreadyHaveAccount: "Sudah punya akun?",
+      loginLink: "Masuk",
+      show: "Tampilkan",
+      hide: "Sembunyikan",
+      errors: {
+        nameTooShort: "Nama lengkap harus minimal 2 karakter",
+        invalidEmail: "Alamat email tidak valid",
+        invalidPhone: "Nomor telepon tidak valid",
+        invalidDate: "Tanggal tidak valid",
+        dateFuture: "Tanggal tidak boleh di masa depan",
+        ageMinimum: "Anda harus berusia minimal 13 tahun",
+        ageMaximum: "Harap masukkan tanggal lahir yang valid",
+        addressTooShort: "Alamat harus minimal 10 karakter",
+        passwordTooShort: "Kata sandi harus minimal 6 karakter",
+        failedToCreate: "Gagal membuat akun",
+        failedToSaveProfile: "Gagal menyimpan informasi profil",
+      },
+    },
+
+    // Forgot Password Page
+    forgotPassword: {
+      title: "Lupa Kata Sandi",
+      description:
+        "Masukkan alamat email Anda dan kami akan mengirimkan instruksi untuk mengatur ulang kata sandi.",
+      emailPlaceholder: "Email",
+      sendButton: "Kirim tautan reset",
+      sending: "Mengirim…",
+      sentMessage: "Jika akun terdaftar untuk",
+      sentMessageEnd:
+        ", Anda akan menerima email dengan instruksi untuk mengatur ulang kata sandi.",
+      backToLogin: "Kembali ke login",
+    },
+
     // Common
     common: {
       date: "Tanggal",
@@ -481,7 +772,7 @@ export const translations = {
   },
 };
 
-// Type for the translation structure (uses string instead of literal types)
+// Type for the translation structure
 export type TranslationKeys = {
   header: {
     home: string;
@@ -578,7 +869,6 @@ export type TranslationKeys = {
   };
   footer: {
     contactUs: string;
-    generalContact: string;
     copyright: string;
   };
   whatsapp: {
@@ -653,6 +943,140 @@ export type TranslationKeys = {
     studioRules: string;
     readRules: string;
     viewRules: string;
+  };
+  account: {
+    title: string;
+    tabs: {
+      profile: string;
+      manageBooking: string;
+      history: string;
+      packages: string;
+    };
+    profile: {
+      fullName: string;
+      email: string;
+      phoneNumber: string;
+      dateOfBirth: string;
+      address: string;
+      editProfile: string;
+      logOut: string;
+      loading: string;
+      userNotFound: string;
+      incompleteWarning: string;
+    };
+    editProfile: {
+      title: string;
+      fullNameRequired: string;
+      fullNameTooShort: string;
+      invalidPhone: string;
+      invalidDate: string;
+      dateFuture: string;
+      ageMinimum: string;
+      ageMaximum: string;
+      addressTooShort: string;
+      saving: string;
+    };
+    manageBooking: {
+      title: string;
+      description: string;
+      noBookings: string;
+      noBookingsDesc: string;
+      reschedule: string;
+      noChanges: string;
+      startsIn: string;
+      paymentMethod: string;
+      singlePayment: string;
+      onTime: string;
+      delayed: string;
+      cancelled: string;
+      loading: string;
+    };
+    bookingHistory: {
+      title: string;
+      noHistory: string;
+      noHistoryDesc: string;
+      completed: string;
+      cancelled: string;
+      noShow: string;
+      loading: string;
+    };
+    activePackages: {
+      title: string;
+      pastPackages: string;
+      noActivePackages: string;
+      noActivePackagesDesc: string;
+      browsePackages: string;
+      active: string;
+      expiringSoon: string;
+      expired: string;
+      completed: string;
+      remaining: string;
+      used: string;
+      progress: string;
+      purchased: string;
+      expires: string;
+      daysLeft: string;
+      classesLabel: string;
+      validityDays: string;
+      loading: string;
+    };
+  };
+  login: {
+    title: string;
+    email: string;
+    password: string;
+    rememberMe: string;
+    forgotPassword: string;
+    loginButton: string;
+    loggingIn: string;
+    noAccount: string;
+    signUp: string;
+    show: string;
+    hide: string;
+  };
+  signup: {
+    title: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    dateOfBirth: string;
+    address: string;
+    addressPlaceholder: string;
+    password: string;
+    passwordPlaceholder: string;
+    confirmPassword: string;
+    retypePassword: string;
+    passwordsMatch: string;
+    passwordsNoMatch: string;
+    createAccount: string;
+    creatingAccount: string;
+    alreadyHaveAccount: string;
+    loginLink: string;
+    show: string;
+    hide: string;
+    errors: {
+      nameTooShort: string;
+      invalidEmail: string;
+      invalidPhone: string;
+      invalidDate: string;
+      dateFuture: string;
+      ageMinimum: string;
+      ageMaximum: string;
+      addressTooShort: string;
+      passwordTooShort: string;
+      failedToCreate: string;
+      failedToSaveProfile: string;
+    };
+  };
+  forgotPassword: {
+    title: string;
+    description: string;
+    emailPlaceholder: string;
+    sendButton: string;
+    sending: string;
+    sentMessage: string;
+    sentMessageEnd: string;
+    backToLogin: string;
   };
   common: {
     date: string;

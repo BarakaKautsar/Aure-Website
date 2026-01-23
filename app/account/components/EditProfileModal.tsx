@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { FiX } from "react-icons/fi";
+import { useLanguage } from "@/lib/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -28,13 +29,13 @@ export default function EditProfileModal({
   initialAddress,
   onSaved,
 }: Props) {
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState(initialName);
   const [phone, setPhone] = useState(initialPhone ?? "");
   const [dateOfBirth, setDateOfBirth] = useState(initialDateOfBirth ?? "");
   const [address, setAddress] = useState(initialAddress ?? "");
   const [loading, setLoading] = useState(false);
 
-  // Reset form when modal opens with new data
   useEffect(() => {
     if (isOpen) {
       setFullName(initialName);
@@ -44,16 +45,17 @@ export default function EditProfileModal({
     }
   }, [isOpen, initialName, initialPhone, initialDateOfBirth, initialAddress]);
 
-  // Validation
   const nameError =
     fullName.trim().length === 0
-      ? "Full name is required"
+      ? t.account.editProfile.fullNameRequired
       : fullName.trim().length < 2
-      ? "Full name is too short"
-      : null;
+        ? t.account.editProfile.fullNameTooShort
+        : null;
 
   const phoneError =
-    phone && !/^[0-9+\s-]+$/.test(phone) ? "Invalid phone number" : null;
+    phone && !/^[0-9+\s-]+$/.test(phone)
+      ? t.account.editProfile.invalidPhone
+      : null;
 
   const dobError =
     dateOfBirth.length > 0
@@ -62,10 +64,10 @@ export default function EditProfileModal({
           const today = new Date();
           const age = today.getFullYear() - dob.getFullYear();
 
-          if (isNaN(dob.getTime())) return "Invalid date";
-          if (dob > today) return "Date cannot be in the future";
-          if (age < 13) return "You must be at least 13 years old";
-          if (age > 120) return "Please enter a valid date of birth";
+          if (isNaN(dob.getTime())) return t.account.editProfile.invalidDate;
+          if (dob > today) return t.account.editProfile.dateFuture;
+          if (age < 13) return t.account.editProfile.ageMinimum;
+          if (age > 120) return t.account.editProfile.ageMaximum;
 
           return null;
         })()
@@ -73,7 +75,7 @@ export default function EditProfileModal({
 
   const addressError =
     address.trim().length > 0 && address.trim().length < 10
-      ? "Address must be at least 10 characters"
+      ? t.account.editProfile.addressTooShort
       : null;
 
   const canSave =
@@ -136,13 +138,14 @@ export default function EditProfileModal({
           <FiX size={20} />
         </button>
 
-        <h2 className="text-2xl text-[#2F3E55] mb-6">Edit Profile</h2>
+        <h2 className="text-2xl text-[#2F3E55] mb-6">
+          {t.account.editProfile.title}
+        </h2>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-          {/* Full Name */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Full Name *
+              {t.account.profile.fullName} *
             </label>
             <input
               autoFocus
@@ -157,10 +160,9 @@ export default function EditProfileModal({
             )}
           </div>
 
-          {/* Phone Number */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Phone Number
+              {t.account.profile.phoneNumber}
             </label>
             <input
               className={`w-full border rounded-lg px-3 py-2 ${
@@ -174,10 +176,9 @@ export default function EditProfileModal({
             )}
           </div>
 
-          {/* Date of Birth */}
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
-              Date of Birth
+              {t.account.profile.dateOfBirth}
             </label>
             <input
               type="date"
@@ -193,9 +194,10 @@ export default function EditProfileModal({
             )}
           </div>
 
-          {/* Address */}
           <div>
-            <label className="block text-sm mb-1 text-[#2F3E55]">Address</label>
+            <label className="block text-sm mb-1 text-[#2F3E55]">
+              {t.account.profile.address}
+            </label>
             <textarea
               rows={3}
               className={`w-full border rounded-lg px-3 py-2 resize-none ${
@@ -203,7 +205,7 @@ export default function EditProfileModal({
               }`}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Full Address"
+              placeholder={t.signup.addressPlaceholder}
             />
             {addressError && (
               <p className="text-xs text-red-500 mt-1">{addressError}</p>
@@ -216,7 +218,7 @@ export default function EditProfileModal({
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition"
           >
-            Cancel
+            {t.common.cancel}
           </button>
           <button
             onClick={handleSave}
@@ -227,7 +229,7 @@ export default function EditProfileModal({
                 : "bg-gray-300 cursor-not-allowed"
             }`}
           >
-            {loading ? "Saving..." : "Save"}
+            {loading ? t.account.editProfile.saving : t.common.save}
           </button>
         </div>
       </div>
