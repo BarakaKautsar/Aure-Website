@@ -5,13 +5,18 @@ import { verifyWebhookCallback } from "@/lib/xendit";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const callbackToken = request.headers.get("x-callback-token") || "";
+
+    console.log("=== XENDIT WEBHOOK RECEIVED ===");
+    console.log("Status:", body.status);
+    console.log("External ID:", body.external_id);
+    console.log("Amount:", body.amount);
 
     // Verify webhook authenticity
     if (
@@ -23,36 +28,67 @@ export async function POST(request: NextRequest) {
 
     // Handle invoice paid event
     if (body.status === "PAID") {
-      let metadata: any = {};
       const externalId = body.external_id || "";
+      let metadata: any = {};
 
-      try {
-        const parts = externalId.split("_");
-        const base64Part = parts.slice(0, -1).join("_");
-        const decoded = Buffer.from(base64Part, "base64").toString("utf-8");
-        const shortData = JSON.parse(decoded);
+      // Try to parse the external_id
+      // Format 1: Pipe-separated - cls|userId|bookingId|timestamp
+      // Format 2: Base64 encoded - {base64}_timestamp
 
-        if (shortData.t === "pkg") {
-          metadata = {
-            type: "package_purchase",
-            userId: shortData.u,
-            packageTypeId: shortData.p,
-          };
-        } else if (shortData.t === "cls") {
-          metadata = {
-            type: "single_class_payment",
-            userId: shortData.u,
-            classId: shortData.c,
-            bookingId: shortData.b,
-          };
+      if (externalId.startsWith("cls|")) {
+        // Pipe-separated format for single class
+        const parts = externalId.split("|");
+        metadata = {
+          type: "single_class_payment",
+          userId: parts[1],
+          bookingId: parts[2],
+        };
+        console.log("Parsed pipe format metadata:", metadata);
+      } else if (externalId.startsWith("pkg|")) {
+        // Pipe-separated format for package (if we add it later)
+        const parts = externalId.split("|");
+        metadata = {
+          type: "package_purchase",
+          userId: parts[1],
+          packageTypeId: parts[2],
+        };
+        console.log("Parsed pipe format metadata:", metadata);
+      } else {
+        // Try base64 encoded format
+        try {
+          const parts = externalId.split("_");
+          // Remove the timestamp (last part)
+          const base64Part = parts.slice(0, -1).join("_");
+          const decoded = Buffer.from(base64Part, "base64").toString("utf-8");
+          console.log("Decoded base64:", decoded);
+
+          const shortData = JSON.parse(decoded);
+
+          if (shortData.t === "pkg") {
+            metadata = {
+              type: "package_purchase",
+              userId: shortData.u,
+              packageTypeId: shortData.p,
+            };
+          } else if (shortData.t === "cls") {
+            metadata = {
+              type: "single_class_payment",
+              userId: shortData.u,
+              classId: shortData.c,
+              bookingId: shortData.b,
+            };
+          }
+          console.log("Parsed base64 metadata:", metadata);
+        } catch (error) {
+          console.error("Failed to decode base64 metadata:", error);
+          console.error("External ID was:", externalId);
         }
-      } catch (error) {
-        console.error("Failed to decode metadata:", error);
       }
 
       const type = metadata.type;
 
       if (!metadata || !type) {
+        console.error("No valid metadata found in external_id:", externalId);
         return NextResponse.json({
           received: true,
           message: "No metadata to process",
@@ -60,6 +96,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (type === "package_purchase") {
+        console.log("Processing package purchase...");
         await handlePackagePurchase({
           userId: metadata.userId,
           packageTypeId: metadata.packageTypeId,
@@ -68,7 +105,10 @@ export async function POST(request: NextRequest) {
           paidAt: body.paid_at,
         });
       } else if (type === "single_class_payment") {
+        console.log("Processing single class payment...");
         await handleSingleClassPayment({
+          userId: metadata.userId,
+          classId: metadata.classId,
           bookingId: metadata.bookingId,
           invoiceId: body.id,
           amount: body.amount,
@@ -81,27 +121,45 @@ export async function POST(request: NextRequest) {
 
     // Handle invoice expired
     if (body.status === "EXPIRED") {
-      let metadata: any = {};
+      console.log("Processing EXPIRED invoice...");
       const externalId = body.external_id || "";
+      let bookingId: string | null = null;
 
-      try {
-        const parts = externalId.split("_");
-        const base64Part = parts.slice(0, -1).join("_");
-        const decoded = Buffer.from(base64Part, "base64").toString("utf-8");
-        const shortData = JSON.parse(decoded);
-
-        if (shortData.t === "cls") {
-          metadata = { bookingId: shortData.b };
+      // Try pipe format first
+      if (externalId.startsWith("cls|")) {
+        const parts = externalId.split("|");
+        bookingId = parts[2];
+      } else {
+        // Try base64 format
+        try {
+          const parts = externalId.split("_");
+          const base64Part = parts.slice(0, -1).join("_");
+          const decoded = Buffer.from(base64Part, "base64").toString("utf-8");
+          const shortData = JSON.parse(decoded);
+          if (shortData.t === "cls") {
+            bookingId = shortData.b;
+          }
+        } catch (error) {
+          console.error(
+            "Failed to decode metadata for expired invoice:",
+            error,
+          );
         }
-      } catch (error) {
-        console.error("Failed to decode metadata:", error);
       }
 
-      if (metadata.bookingId) {
-        await supabase
+      if (bookingId) {
+        // Handle multiple booking IDs
+        const bookingIds = bookingId.split(",");
+        const { error } = await supabase
           .from("bookings")
-          .update({ status: "cancelled" })
-          .eq("id", metadata.bookingId);
+          .update({ status: "cancelled", payment_status: "expired" })
+          .in("id", bookingIds);
+
+        if (error) {
+          console.error("Error updating expired bookings:", error);
+        } else {
+          console.log("Updated expired bookings:", bookingIds);
+        }
       }
 
       return NextResponse.json({ received: true });
@@ -112,7 +170,7 @@ export async function POST(request: NextRequest) {
     console.error("Webhook processing error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -164,7 +222,7 @@ async function handlePackagePurchase({
       .from("transactions")
       .insert({
         user_id: userId,
-        type: "package",
+        type: "package_purchase",
         package_type_id: packageTypeId,
         amount: amount,
         payment_method: "xendit",
@@ -182,28 +240,54 @@ async function handlePackagePurchase({
 }
 
 async function handleSingleClassPayment({
+  userId,
+  classId,
   bookingId,
   invoiceId,
   amount,
   paidAt,
 }: {
+  userId: string;
+  classId: string;
   bookingId: string;
   invoiceId: string;
   amount: number;
   paidAt: string;
 }) {
   try {
-    const { error } = await supabase
+    // Handle multiple booking IDs (comma-separated)
+    const bookingIds = bookingId.split(",");
+
+    // Update all bookings to confirmed
+    const { error: bookingError } = await supabase
       .from("bookings")
       .update({
         status: "confirmed",
         payment_status: "paid",
         payment_id: invoiceId,
       })
-      .eq("id", bookingId);
+      .in("id", bookingIds);
 
-    if (error) {
-      console.error("Error updating booking:", error);
+    if (bookingError) {
+      console.error("Error updating booking:", bookingError);
+    }
+
+    // Create transaction record for single class payment
+    const { error: transactionError } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: userId,
+        type: "single_class",
+        booking_id: bookingIds[0], // Link to first booking
+        amount: amount,
+        payment_method: "xendit",
+        payment_status: "paid",
+        payment_id: invoiceId,
+        paid_at: paidAt,
+      });
+
+    if (transactionError) {
+      console.error("Transaction record error:", transactionError);
     }
   } catch (error) {
     console.error("Error handling single class payment:", error);

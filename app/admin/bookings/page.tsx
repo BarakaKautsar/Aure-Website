@@ -78,7 +78,7 @@ export default function BookingsManagement() {
 
   // Modal
   const [selectedBooking, setSelectedBooking] = useState<BookingDetails | null>(
-    null
+    null,
   );
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
@@ -134,7 +134,7 @@ export default function BookingsManagement() {
               name
             )
           )
-        `
+        `,
         )
         .order("created_at", { ascending: false });
 
@@ -142,7 +142,7 @@ export default function BookingsManagement() {
 
       // Filter out bookings with null classes (in case class was deleted)
       const validBookings = (data as unknown as Booking[]).filter(
-        (booking) => booking.class !== null && booking.user !== null
+        (booking) => booking.class !== null && booking.user !== null,
       );
 
       setBookings(validBookings);
@@ -163,7 +163,7 @@ export default function BookingsManagement() {
       filtered = filtered.filter(
         (booking) =>
           booking.user?.full_name.toLowerCase().includes(query) ||
-          booking.user?.email.toLowerCase().includes(query)
+          booking.user?.email.toLowerCase().includes(query),
       );
     }
 
@@ -175,7 +175,7 @@ export default function BookingsManagement() {
     // Payment method filter
     if (filterPaymentMethod) {
       filtered = filtered.filter(
-        (booking) => booking.payment_method === filterPaymentMethod
+        (booking) => booking.payment_method === filterPaymentMethod,
       );
     }
 
@@ -184,7 +184,7 @@ export default function BookingsManagement() {
       const fromDate = new Date(filterDateFrom);
       fromDate.setHours(0, 0, 0, 0);
       filtered = filtered.filter(
-        (booking) => new Date(booking.class.start_time) >= fromDate
+        (booking) => new Date(booking.class.start_time) >= fromDate,
       );
     }
 
@@ -192,7 +192,7 @@ export default function BookingsManagement() {
       const toDate = new Date(filterDateTo);
       toDate.setHours(23, 59, 59, 999);
       filtered = filtered.filter(
-        (booking) => new Date(booking.class.start_time) <= toDate
+        (booking) => new Date(booking.class.start_time) <= toDate,
       );
     }
 
@@ -260,7 +260,7 @@ export default function BookingsManagement() {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `bookings-filtered-${new Date().toISOString().split("T")[0]}.csv`
+      `bookings-filtered-${new Date().toISOString().split("T")[0]}.csv`,
     );
     link.style.visibility = "hidden";
 
@@ -302,7 +302,7 @@ export default function BookingsManagement() {
               name
             )
           )
-        `
+        `,
         )
         .eq("id", bookingId)
         .single();
@@ -344,7 +344,7 @@ export default function BookingsManagement() {
   // Get paginated bookings
   const paginatedBookings = filteredBookings.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const goToPage = (page: number) => {
@@ -531,7 +531,7 @@ export default function BookingsManagement() {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
-                        }
+                        },
                       )}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -540,7 +540,7 @@ export default function BookingsManagement() {
                         {
                           hour: "2-digit",
                           minute: "2-digit",
-                        }
+                        },
                       )}
                     </div>
                   </td>
@@ -560,12 +560,12 @@ export default function BookingsManagement() {
                         booking.status === "confirmed"
                           ? "bg-green-100 text-green-800"
                           : booking.status === "completed"
-                          ? "bg-blue-100 text-blue-800"
-                          : booking.status === "cancelled"
-                          ? "bg-red-100 text-red-800"
-                          : booking.status === "no_show"
-                          ? "bg-orange-100 text-orange-800"
-                          : "bg-gray-100 text-gray-800"
+                            ? "bg-blue-100 text-blue-800"
+                            : booking.status === "cancelled"
+                              ? "bg-red-100 text-red-800"
+                              : booking.status === "no_show"
+                                ? "bg-orange-100 text-orange-800"
+                                : "bg-gray-100 text-gray-800"
                       }`}
                     >
                       {booking.status.replace("_", " ")}
@@ -735,7 +735,7 @@ function BookingDetailsModal({
                     month: "long",
                     day: "numeric",
                     year: "numeric",
-                  }
+                  },
                 )}
               </p>
               <p className="text-sm">
@@ -745,7 +745,7 @@ function BookingDetailsModal({
                   {
                     hour: "2-digit",
                     minute: "2-digit",
-                  }
+                  },
                 )}
               </p>
               <p className="text-sm">
@@ -795,7 +795,7 @@ function BookingDetailsModal({
                         month: "short",
                         day: "numeric",
                         year: "numeric",
-                      }
+                      },
                     )}
                   </p>
                 </>
@@ -816,10 +816,10 @@ function BookingDetailsModal({
                     booking.status === "confirmed"
                       ? "bg-green-100 text-green-800"
                       : booking.status === "completed"
-                      ? "bg-blue-100 text-blue-800"
-                      : booking.status === "cancelled"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-gray-100 text-gray-800"
+                        ? "bg-blue-100 text-blue-800"
+                        : booking.status === "cancelled"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
                   }`}
                 >
                   {booking.status}

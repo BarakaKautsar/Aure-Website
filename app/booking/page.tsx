@@ -13,6 +13,7 @@ type Package = {
   remaining_credits: number;
   expires_at: string;
   package_type: {
+    id: string;
     category: string;
   };
 };
@@ -121,6 +122,7 @@ function BookingPageContent() {
         remaining_credits,
         expires_at,
         package_type:package_type_id (
+          id,
           category
         )
       `,
@@ -236,16 +238,38 @@ function BookingPageContent() {
           attendee_phone: attendee.phone,
         }));
 
-        const { error: bookingError } = await supabase
+        const { data: createdBookings, error: bookingError } = await supabase
           .from("bookings")
-          .insert(bookingsToCreate);
+          .insert(bookingsToCreate)
+          .select();
 
         if (bookingError) throw bookingError;
 
-        // Deduct credits from package
+        // Get the selected package to find package_type_id
         const selectedPkg = availablePackages.find(
           (p) => p.id === selectedPackage,
         );
+
+        // Create transaction record for package credit usage
+        const { error: transactionError } = await supabase
+          .from("transactions")
+          .insert({
+            user_id: user.id,
+            type: "package_credit",
+            amount: 0, // No money exchanged for package credit usage
+            payment_status: "paid",
+            payment_method: "package_credit",
+            paid_at: new Date().toISOString(),
+            booking_id: createdBookings?.[0]?.id || null,
+            package_type_id: selectedPkg?.package_type?.id || null,
+          });
+
+        if (transactionError) {
+          console.error("Transaction creation error:", transactionError);
+          // Don't throw - booking was successful, transaction is for tracking
+        }
+
+        // Deduct credits from package
         if (selectedPkg) {
           const { error: packageError } = await supabase
             .from("packages")

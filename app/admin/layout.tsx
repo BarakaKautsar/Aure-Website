@@ -16,6 +16,7 @@ import {
   FiX,
   FiUserCheck,
   FiPlusCircle,
+  FiDollarSign,
 } from "react-icons/fi";
 
 export default function AdminLayout({
@@ -68,6 +69,7 @@ export default function AdminLayout({
     { name: "Customers", href: "/admin/customers", icon: FiUserCheck },
     { name: "Class Schedule", href: "/admin/classes", icon: FiCalendar },
     { name: "Bookings", href: "/admin/bookings", icon: FiUsers },
+    { name: "Transactions", href: "/admin/transactions", icon: FiDollarSign },
     {
       name: "Create Booking",
       href: "/admin/create-booking",
@@ -118,8 +120,7 @@ export default function AdminLayout({
             {navigation.map((item) => {
               const isActive =
                 pathname === item.href ||
-                (item.href === "/admin/create-booking" &&
-                  pathname?.startsWith("/admin/create-booking"));
+                (item.href !== "/admin" && pathname?.startsWith(item.href));
 
               return (
                 <Link

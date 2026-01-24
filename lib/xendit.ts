@@ -104,15 +104,33 @@ export async function createSingleClassInvoice({
   bookingId: string;
 }) {
   try {
-    // Encode metadata in externalId (keep it short - 256 char limit!)
+    // Use shorter keys and only first part of UUIDs to stay under 256 char limit
+    // Format: cls|userId|classId|bookingId
+    const shortUserId = userId.split("-")[0]; // First segment of UUID
+    const shortClassId = classId.split("-")[0];
+    // Keep full bookingId(s) as we need it to update the booking
     const metadata = {
       t: "cls",
-      u: userId,
-      c: classId,
-      b: bookingId,
+      u: userId, // Full userId needed for transaction
+      c: shortClassId,
+      b: bookingId, // Full bookingId(s) needed to update bookings
     };
+
     const encoded = Buffer.from(JSON.stringify(metadata)).toString("base64");
-    const externalId = `${encoded.substring(0, 200)}_${Date.now()}`;
+
+    // Check if encoded string is too long (Xendit limit is 256 chars)
+    // If so, use a simpler format
+    let externalId: string;
+    if (encoded.length > 200) {
+      // Use pipe-separated format for long booking IDs
+      // Format: cls|userId|bookingId|timestamp
+      externalId = `cls|${userId}|${bookingId}|${Date.now()}`;
+    } else {
+      externalId = `${encoded}_${Date.now()}`;
+    }
+
+    console.log("Creating invoice with externalId:", externalId);
+    console.log("ExternalId length:", externalId.length);
 
     const invoice = await Invoice.createInvoice({
       data: {
@@ -180,7 +198,7 @@ export async function getInvoice(invoiceId: string) {
 // Verify webhook callback authenticity
 export function verifyWebhookCallback(
   callbackToken: string,
-  webhookToken: string
+  webhookToken: string,
 ): boolean {
   return callbackToken === webhookToken;
 }
