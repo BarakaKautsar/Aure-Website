@@ -88,9 +88,6 @@ export default function Footer() {
 
         {/* General Contact */}
         <div className="border-t border-[#304155]/20 pt-6">
-          <h3 className="text-lg font-semibold mb-4">
-            {t.footer?.generalContact || "General Contact"}
-          </h3>
           <div className="flex flex-col md:flex-row md:gap-8 gap-3 text-base">
             <a
               href="https://instagram.com/aurepilatesstudio"
