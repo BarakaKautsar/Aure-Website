@@ -101,6 +101,8 @@ export const translations = {
       classes: "Classes",
       instructor: "Instructor",
       clearAll: "Clear all",
+      full: "Full",
+      available: "slot available",
     },
 
     // CTA Section
@@ -348,6 +350,8 @@ export const translations = {
         passwordTooShort: "Password must be at least 6 characters",
         failedToCreate: "Failed to create account",
         failedToSaveProfile: "Failed to save profile information",
+        emailExists: "An account with this email already exists",
+        phoneExists: "An account with this phone number already exists",
       },
     },
 
@@ -485,6 +489,8 @@ export const translations = {
       classes: "Kelas",
       instructor: "Instruktur",
       clearAll: "Hapus semua",
+      full: "Penuh",
+      available: "slot tersedia",
     },
 
     // CTA Section
@@ -734,6 +740,8 @@ export const translations = {
         passwordTooShort: "Kata sandi harus minimal 6 karakter",
         failedToCreate: "Gagal membuat akun",
         failedToSaveProfile: "Gagal menyimpan informasi profil",
+        emailExists: "Akun dengan email ini sudah ada",
+        phoneExists: "Akun dengan nomor telepon ini sudah ada",
       },
     },
 
@@ -851,6 +859,8 @@ export type TranslationKeys = {
     classes: string;
     instructor: string;
     clearAll: string;
+    full: string;
+    available: string;
   };
   cta: {
     title: string;
@@ -1066,6 +1076,8 @@ export type TranslationKeys = {
       passwordTooShort: string;
       failedToCreate: string;
       failedToSaveProfile: string;
+      emailExists: string;
+      phoneExists: string;
     };
   };
   forgotPassword: {

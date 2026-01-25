@@ -98,6 +98,23 @@ export default function SignupPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    // Clear error message when user starts typing again
+    if (errorMessage) setErrorMessage(null);
+  };
+
+  // Normalize phone number - remove all non-digits except leading +
+  const normalizePhone = (phone: string): string => {
+    // Remove all spaces, dashes, parentheses
+    let normalized = phone.replace(/[\s\-\(\)]/g, "");
+
+    // Convert +62 to 0 for Indonesian numbers
+    if (normalized.startsWith("+62")) {
+      normalized = "0" + normalized.slice(3);
+    } else if (normalized.startsWith("62")) {
+      normalized = "0" + normalized.slice(2);
+    }
+
+    return normalized;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,6 +122,7 @@ export default function SignupPage() {
     setStatus("loading");
     setErrorMessage(null);
 
+    // Validation checks
     if (form.password.length < 6) {
       setErrorMessage(t.signup.errors.passwordTooShort);
       setStatus("error");
@@ -127,20 +145,77 @@ export default function SignupPage() {
       return;
     }
 
+    // Check if email already exists
+    const emailToCheck = form.email.toLowerCase().trim();
+    const { data: existingEmail, error: emailCheckError } = await supabase
+      .from("profiles")
+      .select("id, email")
+      .ilike("email", emailToCheck)
+      .limit(1);
+
+    if (emailCheckError) {
+      console.error("Email check error:", emailCheckError);
+    }
+
+    if (existingEmail && existingEmail.length > 0) {
+      setErrorMessage(
+        t.signup.errors?.emailExists ||
+          "This email is already registered. Please contact us if this is a mistake.",
+      );
+      setStatus("error");
+      return;
+    }
+
+    // Check if phone already exists (with multiple format checks)
+    const normalizedPhone = normalizePhone(form.phone);
+
+    // Get all profiles and check phone numbers with normalization
+    const { data: allProfiles, error: phoneCheckError } = await supabase
+      .from("profiles")
+      .select("id, phone_number")
+      .not("phone_number", "is", null);
+
+    if (phoneCheckError) {
+      console.error("Phone check error:", phoneCheckError);
+    }
+
+    const phoneExists = allProfiles?.some((profile) => {
+      if (!profile.phone_number) return false;
+      const existingNormalized = normalizePhone(profile.phone_number);
+      return existingNormalized === normalizedPhone;
+    });
+
+    if (phoneExists) {
+      setErrorMessage(
+        t.signup.errors?.phoneExists ||
+          "This phone number is already registered. Please contact us if this is a mistake.",
+      );
+      setStatus("error");
+      return;
+    }
+
+    // Proceed with signup
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
         data: {
           full_name: form.name,
-          phone_number: form.phone,
+          phone_number: normalizedPhone,
         },
       },
     });
 
     if (error || !data.user) {
       console.error(error);
-      setErrorMessage(error?.message || t.signup.errors.failedToCreate);
+      if (error?.message?.includes("already registered")) {
+        setErrorMessage(
+          t.signup.errors?.emailExists ||
+            "This email is already registered. Please contact us if this is a mistake.",
+        );
+      } else {
+        setErrorMessage(error?.message || t.signup.errors.failedToCreate);
+      }
       setStatus("error");
       return;
     }
@@ -149,8 +224,8 @@ export default function SignupPage() {
       .from("profiles")
       .update({
         full_name: form.name,
-        phone_number: form.phone,
-        email: form.email,
+        phone_number: normalizedPhone,
+        email: emailToCheck,
         date_of_birth: form.dateOfBirth,
         address: form.address,
       })
@@ -362,9 +437,9 @@ export default function SignupPage() {
           </div>
 
           {errorMessage && (
-            <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">
-              {errorMessage}
-            </p>
+            <div className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">
+              <p>{errorMessage}</p>
+            </div>
           )}
 
           <button

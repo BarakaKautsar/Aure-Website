@@ -67,7 +67,8 @@ export default function ScheduleSection() {
 
   const [selectedClass, setSelectedClass] = useState<ScheduleItem | null>(null);
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
-  const [showWaitlistSuccessModal, setShowWaitlistSuccessModal] = useState(false);
+  const [showWaitlistSuccessModal, setShowWaitlistSuccessModal] =
+    useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const dateRange = useMemo(() => {
@@ -128,7 +129,7 @@ export default function ScheduleSection() {
         status,
         coach:coach_id (name),
         bookings:bookings!class_id (id, status)
-      `
+      `,
       )
       .gte("start_time", startOfDay.toISOString())
       .lte("start_time", endOfDay.toISOString())
@@ -338,17 +339,42 @@ export default function ScheduleSection() {
               }}
               className="flex items-center gap-2 px-5 py-3 bg-white rounded-full border border-gray-300 hover:border-[#2E3A4A] transition font-medium text-[#2E3A4A]"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               <span>
                 {filters.location === "All Locations"
                   ? t.schedule.allLocations
                   : filters.location.replace("Aure Pilates Studio ", "")}
               </span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -359,7 +385,9 @@ export default function ScheduleSection() {
               <button
                 onClick={() => {
                   setFilters((f) => ({ ...f, location: "All Locations" }));
-                  document.getElementById("location-dropdown")?.classList.add("hidden");
+                  document
+                    .getElementById("location-dropdown")
+                    ?.classList.add("hidden");
                 }}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
               >
@@ -370,7 +398,9 @@ export default function ScheduleSection() {
                   key={loc}
                   onClick={() => {
                     setFilters((f) => ({ ...f, location: loc }));
-                    document.getElementById("location-dropdown")?.classList.add("hidden");
+                    document
+                      .getElementById("location-dropdown")
+                      ?.classList.add("hidden");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                 >
@@ -389,12 +419,32 @@ export default function ScheduleSection() {
               }}
               className="flex items-center gap-2 px-5 py-3 bg-white rounded-full border border-gray-300 hover:border-[#2E3A4A] transition font-medium text-[#2E3A4A]"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
               <span>{filters.classType || t.schedule.classes}</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -405,7 +455,9 @@ export default function ScheduleSection() {
               <button
                 onClick={() => {
                   setFilters((f) => ({ ...f, classType: "" }));
-                  document.getElementById("class-dropdown")?.classList.add("hidden");
+                  document
+                    .getElementById("class-dropdown")
+                    ?.classList.add("hidden");
                 }}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
               >
@@ -416,7 +468,9 @@ export default function ScheduleSection() {
                   key={type}
                   onClick={() => {
                     setFilters((f) => ({ ...f, classType: type }));
-                    document.getElementById("class-dropdown")?.classList.add("hidden");
+                    document
+                      .getElementById("class-dropdown")
+                      ?.classList.add("hidden");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                 >
@@ -435,12 +489,32 @@ export default function ScheduleSection() {
               }}
               className="flex items-center gap-2 px-5 py-3 bg-white rounded-full border border-gray-300 hover:border-[#2E3A4A] transition font-medium text-[#2E3A4A]"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
               <span>{filters.coach || t.schedule.instructor}</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -451,7 +525,9 @@ export default function ScheduleSection() {
               <button
                 onClick={() => {
                   setFilters((f) => ({ ...f, coach: "" }));
-                  document.getElementById("coach-dropdown")?.classList.add("hidden");
+                  document
+                    .getElementById("coach-dropdown")
+                    ?.classList.add("hidden");
                 }}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
               >
@@ -462,7 +538,9 @@ export default function ScheduleSection() {
                   key={coach}
                   onClick={() => {
                     setFilters((f) => ({ ...f, coach: coach }));
-                    document.getElementById("coach-dropdown")?.classList.add("hidden");
+                    document
+                      .getElementById("coach-dropdown")
+                      ?.classList.add("hidden");
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm capitalize"
                 >
@@ -568,7 +646,7 @@ export default function ScheduleSection() {
                       </p>
                     </div>
 
-                    {/* Middle-Right: Location */}
+                    {/* Middle-Right: Location & Capacity */}
                     <div className="shrink-0">
                       <p
                         className={`text-sm font-medium ${
@@ -579,12 +657,18 @@ export default function ScheduleSection() {
                       </p>
                       <p
                         className={`text-xs ${
-                          hasStarted ? "text-gray-400" : "text-gray-500"
+                          hasStarted
+                            ? "text-gray-400"
+                            : isFull
+                              ? "text-red-500 font-medium"
+                              : spotsLeft <= 3
+                                ? "text-orange-500 font-medium"
+                                : "text-gray-500"
                         }`}
                       >
                         {hasStarted
                           ? t.schedule.completed
-                          : `${spotsLeft} ${t.schedule.left}`}
+                          : `${spotsLeft}/${item.capacity} ${t.schedule.available || "available"}`}
                       </p>
                     </div>
 
