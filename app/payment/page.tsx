@@ -1,7 +1,7 @@
 // app/payment/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-export default function PaymentPage() {
+function PaymentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -165,45 +165,61 @@ export default function PaymentPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[#F7F4EF]">
-        <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md text-center">
-          <h1 className="text-2xl font-medium text-red-600 mb-4">
-            Payment Error
-          </h1>
-          <p className="text-[#2F3E55] mb-6">{error}</p>
-          <button
-            onClick={() => router.push("/")}
-            className="bg-[#2F3E55] text-white px-6 py-3 rounded-xl hover:opacity-90"
-          >
-            Back to Home
-          </button>
-        </div>
-      </main>
+      <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md text-center">
+        <h1 className="text-2xl font-medium text-red-600 mb-4">
+          Payment Error
+        </h1>
+        <p className="text-[#2F3E55] mb-6">{error}</p>
+        <button
+          onClick={() => router.push("/")}
+          className="bg-[#2F3E55] text-white px-6 py-3 rounded-xl hover:opacity-90"
+        >
+          Back to Home
+        </button>
+      </div>
     );
   }
 
   return (
+    <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md text-center">
+      {loading ? (
+        <>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#2F3E55] mx-auto mb-6"></div>
+          <h1 className="text-2xl font-medium text-[#2F3E55] mb-2">
+            Preparing Payment
+          </h1>
+          <p className="text-gray-600">Please wait...</p>
+        </>
+      ) : (
+        <>
+          <h1 className="text-2xl font-medium text-[#2F3E55] mb-4">
+            Complete Your Payment
+          </h1>
+          <p className="text-gray-600">
+            Payment window will open automatically
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
     <main className="min-h-screen flex items-center justify-center bg-[#F7F4EF]">
-      <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md text-center">
-        {loading ? (
-          <>
+      <Suspense
+        fallback={
+          <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#2F3E55] mx-auto mb-6"></div>
             <h1 className="text-2xl font-medium text-[#2F3E55] mb-2">
-              Preparing Payment
+              Loading Payment
             </h1>
             <p className="text-gray-600">Please wait...</p>
-          </>
-        ) : (
-          <>
-            <h1 className="text-2xl font-medium text-[#2F3E55] mb-4">
-              Complete Your Payment
-            </h1>
-            <p className="text-gray-600">
-              Payment window will open automatically
-            </p>
-          </>
-        )}
-      </div>
+          </div>
+        }
+      >
+        <PaymentContent />
+      </Suspense>
     </main>
   );
 }
