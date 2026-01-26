@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
@@ -25,6 +25,85 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Duplicate check states
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [checkingPhone, setCheckingPhone] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+  const [phoneExists, setPhoneExists] = useState(false);
+
+  // Normalize phone number - remove all non-digits except leading +
+  const normalizePhone = (phone: string): string => {
+    // Remove all spaces, dashes, parentheses
+    let normalized = phone.replace(/[\s\-\(\)]/g, "");
+
+    // Convert +62 to 0 for Indonesian numbers
+    if (normalized.startsWith("+62")) {
+      normalized = "0" + normalized.slice(3);
+    } else if (normalized.startsWith("62")) {
+      normalized = "0" + normalized.slice(2);
+    }
+
+    return normalized;
+  };
+
+  // Debounce email check
+  useEffect(() => {
+    if (!form.email || !form.email.includes("@")) {
+      setEmailExists(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setCheckingEmail(true);
+      try {
+        const response = await fetch("/api/check-duplicate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: form.email }),
+        });
+
+        const result = await response.json();
+        setEmailExists(result.emailExists);
+      } catch (err) {
+        console.error("Email check error:", err);
+        setEmailExists(false);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [form.email]);
+
+  // Debounce phone check
+  useEffect(() => {
+    if (!form.phone || form.phone.length < 8) {
+      setPhoneExists(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setCheckingPhone(true);
+      try {
+        const response = await fetch("/api/check-duplicate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: form.phone }),
+        });
+
+        const result = await response.json();
+        setPhoneExists(result.phoneExists);
+      } catch (err) {
+        console.error("Phone check error:", err);
+        setPhoneExists(false);
+      } finally {
+        setCheckingPhone(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [form.phone]);
+
   const passwordsMatch =
     form.password.length > 0 &&
     form.confirmPassword.length > 0 &&
@@ -38,12 +117,18 @@ export default function SignupPage() {
   const emailError =
     form.email.length > 0 && !form.email.includes("@")
       ? t.signup.errors.invalidEmail
-      : null;
+      : emailExists
+        ? t.signup.errors?.emailExists ||
+          "This email is already registered. Please contact us if this is a mistake."
+        : null;
 
   const phoneError =
     form.phone.length > 0 && !/^[0-9+\s-]+$/.test(form.phone)
       ? t.signup.errors.invalidPhone
-      : null;
+      : phoneExists
+        ? t.signup.errors?.phoneExists ||
+          "This phone number is already registered. Please contact us if this is a mistake."
+        : null;
 
   const dobError =
     form.dateOfBirth.length > 0
@@ -77,7 +162,11 @@ export default function SignupPage() {
   const canSubmit =
     form.name.trim().length >= 2 &&
     form.email.includes("@") &&
+    !emailExists &&
+    !checkingEmail &&
     form.phone.length > 0 &&
+    !phoneExists &&
+    !checkingPhone &&
     form.dateOfBirth.length > 0 &&
     form.address.trim().length >= 10 &&
     form.password.length >= 6 &&
@@ -100,21 +189,6 @@ export default function SignupPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
     // Clear error message when user starts typing again
     if (errorMessage) setErrorMessage(null);
-  };
-
-  // Normalize phone number - remove all non-digits except leading +
-  const normalizePhone = (phone: string): string => {
-    // Remove all spaces, dashes, parentheses
-    let normalized = phone.replace(/[\s\-\(\)]/g, "");
-
-    // Convert +62 to 0 for Indonesian numbers
-    if (normalized.startsWith("+62")) {
-      normalized = "0" + normalized.slice(3);
-    } else if (normalized.startsWith("62")) {
-      normalized = "0" + normalized.slice(2);
-    }
-
-    return normalized;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,19 +219,8 @@ export default function SignupPage() {
       return;
     }
 
-    // Check if email already exists
-    const emailToCheck = form.email.toLowerCase().trim();
-    const { data: existingEmail, error: emailCheckError } = await supabase
-      .from("profiles")
-      .select("id, email")
-      .ilike("email", emailToCheck)
-      .limit(1);
-
-    if (emailCheckError) {
-      console.error("Email check error:", emailCheckError);
-    }
-
-    if (existingEmail && existingEmail.length > 0) {
+    // Final check for duplicates (in case real-time check missed something)
+    if (emailExists) {
       setErrorMessage(
         t.signup.errors?.emailExists ||
           "This email is already registered. Please contact us if this is a mistake.",
@@ -165,25 +228,6 @@ export default function SignupPage() {
       setStatus("error");
       return;
     }
-
-    // Check if phone already exists (with multiple format checks)
-    const normalizedPhone = normalizePhone(form.phone);
-
-    // Get all profiles and check phone numbers with normalization
-    const { data: allProfiles, error: phoneCheckError } = await supabase
-      .from("profiles")
-      .select("id, phone_number")
-      .not("phone_number", "is", null);
-
-    if (phoneCheckError) {
-      console.error("Phone check error:", phoneCheckError);
-    }
-
-    const phoneExists = allProfiles?.some((profile) => {
-      if (!profile.phone_number) return false;
-      const existingNormalized = normalizePhone(profile.phone_number);
-      return existingNormalized === normalizedPhone;
-    });
 
     if (phoneExists) {
       setErrorMessage(
@@ -193,6 +237,9 @@ export default function SignupPage() {
       setStatus("error");
       return;
     }
+
+    const normalizedPhone = normalizePhone(form.phone);
+    const emailToCheck = form.email.toLowerCase().trim();
 
     // Proceed with signup
     const { data, error } = await supabase.auth.signUp({
@@ -291,39 +338,81 @@ export default function SignupPage() {
             <label className="block text-sm mb-1 text-[#2F3E55]">
               {t.signup.email} *
             </label>
-            <input
-              type="email"
-              name="email"
-              placeholder={t.signup.email}
-              value={form.email}
-              onChange={handleChange}
-              className={`${inputBase} ${
-                emailError && form.email.length > 0 ? "border-red-500" : ""
-              }`}
-              required
-            />
+            <div className="relative">
+              <input
+                type="email"
+                name="email"
+                placeholder={t.signup.email}
+                value={form.email}
+                onChange={handleChange}
+                className={`${inputBase} pr-20 ${
+                  (emailError || emailExists) && form.email.length > 0
+                    ? "border-red-500"
+                    : !emailError &&
+                        !emailExists &&
+                        !checkingEmail &&
+                        form.email.includes("@")
+                      ? "border-green-500"
+                      : ""
+                }`}
+                required
+              />
+              {checkingEmail && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                  Checking...
+                </span>
+              )}
+            </div>
             {emailError && form.email.length > 0 && (
               <p className="text-xs text-red-500 mt-1">{emailError}</p>
             )}
+            {!emailError &&
+              !emailExists &&
+              !checkingEmail &&
+              form.email.includes("@") && (
+                <p className="text-xs text-green-600 mt-1">✓ Email available</p>
+              )}
           </div>
 
           <div>
             <label className="block text-sm mb-1 text-[#2F3E55]">
               {t.signup.phoneNumber} *
             </label>
-            <input
-              name="phone"
-              placeholder={t.signup.phoneNumber}
-              value={form.phone}
-              onChange={handleChange}
-              className={`${inputBase} ${
-                phoneError && form.phone.length > 0 ? "border-red-500" : ""
-              }`}
-              required
-            />
+            <div className="relative">
+              <input
+                name="phone"
+                placeholder={t.signup.phoneNumber}
+                value={form.phone}
+                onChange={handleChange}
+                className={`${inputBase} pr-20 ${
+                  (phoneError || phoneExists) && form.phone.length > 0
+                    ? "border-red-500"
+                    : !phoneError &&
+                        !phoneExists &&
+                        !checkingPhone &&
+                        form.phone.length >= 8
+                      ? "border-green-500"
+                      : ""
+                }`}
+                required
+              />
+              {checkingPhone && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                  Checking...
+                </span>
+              )}
+            </div>
             {phoneError && form.phone.length > 0 && (
               <p className="text-xs text-red-500 mt-1">{phoneError}</p>
             )}
+            {!phoneError &&
+              !phoneExists &&
+              !checkingPhone &&
+              form.phone.length >= 8 && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✓ Phone number available
+                </p>
+              )}
           </div>
 
           <div>
