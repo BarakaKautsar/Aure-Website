@@ -303,30 +303,31 @@ function BookingPageContent() {
 
         if (bookingError) throw bookingError;
 
-        // Call API route to create Xendit invoice
-        const bookingIds = createdBookings.map((b: any) => b.id).join(",");
+        // Call API route to create Midtrans payment
+        const bookingIds = createdBookings.map((b: any) => b.id);
 
-        const response = await fetch("/api/create-invoice", {
+        const response = await fetch("/api/payment/create-class", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: user.id,
             userEmail: user.email,
             userName: userProfile?.full_name || "User",
+            userPhone: userProfile?.phone_number || "",
             className: classTitle,
             classDate: classDate,
             amount: totalPrice,
             classId: classId,
-            bookingId: bookingIds,
+            bookingIds: bookingIds,
           }),
         });
 
-        const invoice = await response.json();
+        const payment = await response.json();
 
-        if (invoice.success && invoice.invoiceUrl) {
-          window.location.href = invoice.invoiceUrl;
+        if (payment.success && payment.redirectUrl) {
+          window.location.href = payment.redirectUrl;
         } else {
-          throw new Error(invoice.error || "Failed to create invoice");
+          throw new Error(payment.error || "Failed to create payment");
         }
       }
     } catch (err) {

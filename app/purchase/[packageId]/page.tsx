@@ -34,6 +34,7 @@ export default function PurchasePage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,12 +49,21 @@ export default function PurchasePage() {
 
     if (!user) {
       router.push(
-        `/login?redirect=${encodeURIComponent(`/purchase/${packageId}`)}`
+        `/login?redirect=${encodeURIComponent(`/purchase/${packageId}`)}`,
       );
       return;
     }
 
     setUser(user);
+
+    // Get user profile
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, phone_number")
+      .eq("id", user.id)
+      .single();
+
+    setUserProfile(profile);
   };
 
   const loadPackage = async () => {
@@ -77,50 +87,37 @@ export default function PurchasePage() {
   };
 
   const handlePurchase = async () => {
-    if (!user || !packageType) return;
+    if (!user || !packageType || !userProfile) return;
 
     setProcessing(true);
     setError(null);
 
     try {
-      // Get user profile
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile) {
-        setError("Profile not found");
-        setProcessing(false);
-        return;
-      }
-
-      // Create payment invoice
-      const response = await fetch("/api/payment/create-invoice", {
+      // Create Midtrans payment
+      const response = await fetch("/api/payment/create-package", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.id,
           userEmail: user.email,
-          userName: profile.full_name || "Member",
+          userName: userProfile.full_name || "Member",
+          userPhone: userProfile.phone_number || "",
           packageName: packageType.name,
           amount: packageType.price,
           packageTypeId: packageType.id,
-          type: "package",
         }),
       });
 
       const result = await response.json();
 
       if (!result.success) {
-        setError("Failed to create payment. Please try again.");
+        setError(result.error || "Failed to create payment. Please try again.");
         setProcessing(false);
         return;
       }
 
-      // Redirect to Xendit payment page
-      window.location.href = result.invoiceUrl;
+      // Redirect to Midtrans payment page
+      window.location.href = result.redirectUrl;
     } catch (error) {
       console.error("Purchase error:", error);
       setError("Failed to process purchase. Please try again.");
@@ -141,7 +138,7 @@ export default function PurchasePage() {
   }
 
   const pricePerClass = Math.round(
-    packageType.price / packageType.class_credits
+    packageType.price / packageType.class_credits,
   );
 
   return (
@@ -299,14 +296,14 @@ export default function PurchasePage() {
 
               <button
                 onClick={handlePurchase}
-                disabled={processing}
-                className="w-full bg-orange-500 text-white py-4 rounded-full font-medium hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={processing || !userProfile}
+                className="w-full bg-[#2E3A4A] text-white py-4 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processing ? "Processing..." : "Proceed to Payment"}
               </button>
 
               <p className="text-xs text-gray-500 mt-3 text-center">
-                Secure payment powered by Xendit
+                Secure payment powered by Midtrans
               </p>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
