@@ -9,6 +9,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiFilter,
+  FiMapPin,
 } from "react-icons/fi";
 
 type Transaction = {
@@ -18,6 +19,8 @@ type Transaction = {
   payment_status: string;
   paid_at: string | null;
   type: string;
+  payment_id: string | null;
+  location: string | null;
   user: {
     full_name: string;
     email: string;
@@ -28,6 +31,7 @@ type Transaction = {
       title: string;
       class_type: string;
       start_time: string;
+      location: string | null;
     } | null;
   } | null;
   package_type: {
@@ -57,6 +61,7 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterClassType, setFilterClassType] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
 
@@ -74,6 +79,7 @@ export default function TransactionsPage() {
     searchQuery,
     filterStatus,
     filterClassType,
+    filterLocation,
     filterDateFrom,
     filterDateTo,
   ]);
@@ -93,7 +99,7 @@ export default function TransactionsPage() {
     setLoading(true);
 
     try {
-      // First, get all transactions
+      // First, get all transactions including new location field
       const { data: transactionsData, error: transactionsError } =
         await supabase
           .from("transactions")
@@ -105,6 +111,8 @@ export default function TransactionsPage() {
           payment_status,
           paid_at,
           type,
+          payment_id,
+          location,
           user_id,
           booking_id,
           package_type_id
@@ -146,7 +154,7 @@ export default function TransactionsPage() {
             if (bookingData?.class_id) {
               const { data: classData } = await supabase
                 .from("classes")
-                .select("title, class_type, start_time")
+                .select("title, class_type, start_time, location")
                 .eq("id", bookingData.class_id)
                 .single();
 
@@ -166,7 +174,7 @@ export default function TransactionsPage() {
               .single();
             packageType = pkgTypeData;
 
-            // Get package usage if this is a package purchase
+            // Get package usage if this is a package purchase or package credit usage
             if (t.user_id && pkgTypeData) {
               const { data: pkgData } = await supabase
                 .from("packages")
@@ -202,13 +210,14 @@ export default function TransactionsPage() {
   const applyFilters = () => {
     let filtered = [...transactions];
 
-    // Search filter (customer name or email)
+    // Search filter (customer name, email, or payment_id)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (t) =>
           t.user?.full_name?.toLowerCase().includes(query) ||
-          t.user?.email?.toLowerCase().includes(query),
+          t.user?.email?.toLowerCase().includes(query) ||
+          t.payment_id?.toLowerCase().includes(query),
       );
     }
 
@@ -222,6 +231,19 @@ export default function TransactionsPage() {
       filtered = filtered.filter(
         (t) => t.booking?.class?.class_type === filterClassType,
       );
+    }
+
+    // Location filter
+    if (filterLocation) {
+      filtered = filtered.filter((t) => {
+        // Check transaction location first, then fall back to class location
+        const txLocation = t.location?.toLowerCase();
+        const classLocation = t.booking?.class?.location?.toLowerCase();
+        const filterLoc = filterLocation.toLowerCase();
+        return (
+          txLocation?.includes(filterLoc) || classLocation?.includes(filterLoc)
+        );
+      });
     }
 
     // Date range filter (based on paid_at or created_at)
@@ -248,10 +270,11 @@ export default function TransactionsPage() {
 
   const exportToCSV = () => {
     const headers = [
-      "No Invoice#",
+      "Invoice ID",
       "Customer",
       "Email",
       "Status",
+      "Location",
       "Tanggal Bayar",
       "Tanggal Kelas",
       "Gross Total",
@@ -260,8 +283,8 @@ export default function TransactionsPage() {
       "Terpakai",
     ];
 
-    const rows = filteredTransactions.map((t, index) => {
-      const invoiceNumber = filteredTransactions.length - index;
+    const rows = filteredTransactions.map((t) => {
+      const invoiceId = t.payment_id || t.id.substring(0, 8);
       const paymentDate = t.paid_at
         ? new Date(t.paid_at).toLocaleDateString("en-CA")
         : "-";
@@ -269,26 +292,35 @@ export default function TransactionsPage() {
         ? new Date(t.booking.class.start_time).toLocaleDateString("en-CA")
         : "-";
 
+      // Get location from transaction or class
+      const location = t.location || t.booking?.class?.location || "-";
+
       let packageName = "-";
       let usage = "-";
 
-      if (t.package_type) {
-        packageName =
-          t.package_type.name || `Bundling ${t.package_type.class_credits}x`;
+      if (t.type === "package_purchase") {
+        packageName = t.package_type?.name || `Package Purchase`;
+        if (t.package) {
+          const used = t.package.total_credits - t.package.remaining_credits;
+          usage = `${used}/${t.package.total_credits}`;
+        }
+      } else if (t.type === "package_credit") {
+        packageName = t.package_type?.name || "Package Credit";
         if (t.package) {
           const used = t.package.total_credits - t.package.remaining_credits;
           usage = `${used}/${t.package.total_credits}`;
         }
       } else if (t.type === "single_class") {
-        packageName = "Visit";
+        packageName = "Single Visit";
         usage = "1";
       }
 
       return [
-        invoiceNumber,
+        invoiceId,
         t.user?.full_name || "-",
         t.user?.email || "-",
         t.payment_status?.toUpperCase() || "-",
+        location,
         paymentDate,
         classDate,
         t.amount || 0,
@@ -337,6 +369,7 @@ export default function TransactionsPage() {
       paid: "bg-green-100 text-green-800",
       pending: "bg-yellow-100 text-yellow-800",
       failed: "bg-red-100 text-red-800",
+      expired: "bg-gray-100 text-gray-800",
       refunded: "bg-gray-100 text-gray-800",
     };
     return styles[status] || "bg-gray-100 text-gray-800";
@@ -349,6 +382,32 @@ export default function TransactionsPage() {
       matt: "bg-green-100 text-green-700",
     };
     return styles[type] || "bg-gray-100 text-gray-700";
+  };
+
+  const getLocationBadge = (location: string | null) => {
+    if (!location) return null;
+    const loc = location.toLowerCase();
+    if (loc.includes("kbp") || loc.includes("bandung")) {
+      return "bg-orange-100 text-orange-700";
+    } else if (loc.includes("tasik")) {
+      return "bg-teal-100 text-teal-700";
+    }
+    return "bg-gray-100 text-gray-700";
+  };
+
+  // Format payment_id for display (truncate if too long)
+  const formatInvoiceId = (paymentId: string | null, fallbackId: string) => {
+    if (!paymentId) return fallbackId.substring(0, 8);
+    // If it's a Midtrans order ID like "CLS_xxx_xxx_timestamp" or "PKG_xxx_xxx_timestamp"
+    // Show a shortened version
+    if (paymentId.length > 20) {
+      const parts = paymentId.split("_");
+      if (parts.length >= 2) {
+        return `${parts[0]}_${parts[1]}...`;
+      }
+      return paymentId.substring(0, 15) + "...";
+    }
+    return paymentId;
   };
 
   if (loading) {
@@ -382,7 +441,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-sm text-gray-600 mb-1">Total Transactions</p>
           <p className="text-3xl font-bold text-gray-900">
@@ -404,6 +463,15 @@ export default function TransactionsPage() {
             Rp {totalRevenue.toLocaleString("id-ID")}
           </p>
         </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-sm text-gray-600 mb-1">Pending</p>
+          <p className="text-3xl font-bold text-yellow-600">
+            {
+              filteredTransactions.filter((t) => t.payment_status === "pending")
+                .length
+            }
+          </p>
+        </div>
       </div>
 
       {/* Filters */}
@@ -423,7 +491,7 @@ export default function TransactionsPage() {
               />
               <input
                 type="text"
-                placeholder="Search by customer name or email..."
+                placeholder="Search by customer name, email, or invoice ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
@@ -445,7 +513,24 @@ export default function TransactionsPage() {
               <option value="paid">Paid</option>
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
+              <option value="expired">Expired</option>
               <option value="refunded">Refunded</option>
+            </select>
+          </div>
+
+          {/* Location Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Location
+            </label>
+            <select
+              value={filterLocation}
+              onChange={(e) => setFilterLocation(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]"
+            >
+              <option value="">All Locations</option>
+              <option value="KBP">KBP</option>
+              <option value="Tasikmalaya">Tasikmalaya</option>
             </select>
           </div>
 
@@ -499,6 +584,7 @@ export default function TransactionsPage() {
                 setSearchQuery("");
                 setFilterStatus("");
                 setFilterClassType("");
+                setFilterLocation("");
                 setFilterDateFrom("");
                 setFilterDateTo("");
               }}
@@ -517,13 +603,16 @@ export default function TransactionsPage() {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                  No Invoice#
+                  Invoice ID
                 </th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
                   Customer
                 </th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">
                   Status
+                </th>
+                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">
+                  Location
                 </th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
                   Tanggal Bayar
@@ -546,32 +635,49 @@ export default function TransactionsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {paginatedTransactions.map((t, index) => {
-                const invoiceNumber =
-                  filteredTransactions.length -
-                  ((currentPage - 1) * ITEMS_PER_PAGE + index);
+              {paginatedTransactions.map((t) => {
+                const invoiceId = formatInvoiceId(t.payment_id, t.id);
+
+                // Get location from transaction or fall back to class location
+                const displayLocation =
+                  t.location || t.booking?.class?.location || null;
 
                 let packageName = "-";
                 let usage = "-";
 
-                if (t.package_type) {
-                  packageName =
-                    t.package_type.name ||
-                    `Bundling ${t.package_type.class_credits}x`;
+                if (t.type === "package_purchase") {
+                  packageName = t.package_type?.name || "Package Purchase";
                   if (t.package) {
                     const used =
                       t.package.total_credits - t.package.remaining_credits;
                     usage = `${used}/${t.package.total_credits}`;
                   }
+                } else if (t.type === "package_credit") {
+                  packageName = t.package_type?.name || "Package Credit";
+                  if (t.package) {
+                    const used =
+                      t.package.total_credits - t.package.remaining_credits;
+                    usage = `${used}/${t.package.total_credits}`;
+                  } else {
+                    usage = "1"; // At minimum, 1 credit was used
+                  }
                 } else if (t.type === "single_class") {
-                  packageName = "Visit";
+                  packageName = "Single Visit";
                   usage = "1";
                 }
 
                 return (
                   <tr key={t.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                      {invoiceNumber}
+                    <td className="px-4 py-4">
+                      <div
+                        className="text-sm font-mono text-gray-900 cursor-help"
+                        title={t.payment_id || t.id}
+                      >
+                        {invoiceId}
+                      </div>
+                      <div className="text-xs text-gray-500 capitalize">
+                        {t.type.replace("_", " ")}
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm font-medium text-gray-900">
@@ -590,6 +696,20 @@ export default function TransactionsPage() {
                         {t.payment_status}
                       </span>
                     </td>
+                    <td className="px-4 py-4 text-center">
+                      {displayLocation ? (
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getLocationBadge(
+                            displayLocation,
+                          )}`}
+                        >
+                          <FiMapPin size={10} />
+                          {displayLocation}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
                     <td className="px-4 py-4 text-sm text-gray-900">
                       {t.paid_at
                         ? new Date(t.paid_at).toLocaleDateString("en-CA")
@@ -603,7 +723,9 @@ export default function TransactionsPage() {
                         : "-"}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-900 text-right font-medium">
-                      {t.amount ? t.amount.toLocaleString("id-ID") : "-"}
+                      {t.amount
+                        ? `Rp ${t.amount.toLocaleString("id-ID")}`
+                        : "-"}
                     </td>
                     <td className="px-4 py-4 text-center">
                       {t.booking?.class?.class_type ? (
@@ -615,7 +737,7 @@ export default function TransactionsPage() {
                           {t.booking.class.class_type.replace("_", " ")}
                         </span>
                       ) : (
-                        "-"
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-900">

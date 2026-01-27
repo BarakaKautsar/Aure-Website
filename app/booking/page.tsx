@@ -1,3 +1,4 @@
+// app/booking/page.tsx
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
@@ -251,6 +252,7 @@ function BookingPageContent() {
         );
 
         // Create transaction record for package credit usage
+        // Include location from the class being booked
         const { error: transactionError } = await supabase
           .from("transactions")
           .insert({
@@ -262,6 +264,7 @@ function BookingPageContent() {
             paid_at: new Date().toISOString(),
             booking_id: createdBookings?.[0]?.id || null,
             package_type_id: selectedPkg?.package_type?.id || null,
+            location: classLocation || null, // Add location from the class
           });
 
         if (transactionError) {

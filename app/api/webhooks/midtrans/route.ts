@@ -129,62 +129,88 @@ async function handlePackageTransaction({
   try {
     console.log("Processing package transaction...");
 
-    // Only process if payment is successful and not fraudulent
+    // Get package type details (needed for both creating package and getting location)
+    const { data: packageType, error: fetchError } = await supabase
+      .from("package_types")
+      .select("*")
+      .eq("id", packageTypeId)
+      .single();
+
+    if (fetchError || !packageType) {
+      console.error("Package type not found:", packageTypeId);
+      return;
+    }
+
+    // Only create package if payment is successful and not fraudulent
     if (
       (transactionStatus === "capture" || transactionStatus === "settlement") &&
       fraudStatus === "accept"
     ) {
-      // Get package type details
-      const { data: packageType, error: fetchError } = await supabase
-        .from("package_types")
-        .select("*")
-        .eq("id", packageTypeId)
+      // Check if package already exists for this order (idempotency)
+      const { data: existingPackage } = await supabase
+        .from("packages")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("package_type_id", packageTypeId)
+        .gte("created_at", new Date(Date.now() - 60000).toISOString()) // Created within last minute
         .single();
 
-      if (fetchError || !packageType) {
-        console.error("Package type not found:", packageTypeId);
-        return;
+      if (!existingPackage) {
+        // Calculate expiry date
+        const purchaseDate = new Date(transactionTime);
+        const expiryDate = new Date(purchaseDate);
+        expiryDate.setDate(expiryDate.getDate() + packageType.validity_days);
+
+        // Create package for user
+        const { error: packageError } = await supabase.from("packages").insert({
+          user_id: userId,
+          package_type_id: packageTypeId,
+          total_credits: packageType.class_credits,
+          remaining_credits: packageType.class_credits,
+          expires_at: expiryDate.toISOString(),
+          status: "active",
+        });
+
+        if (packageError) {
+          console.error("Error creating package:", packageError);
+          return;
+        }
+
+        console.log("Package created successfully");
+      } else {
+        console.log("Package already exists, skipping creation");
       }
-
-      // Calculate expiry date
-      const purchaseDate = new Date(transactionTime);
-      const expiryDate = new Date(purchaseDate);
-      expiryDate.setDate(expiryDate.getDate() + packageType.validity_days);
-
-      // Create package for user
-      const { error: packageError } = await supabase.from("packages").insert({
-        user_id: userId,
-        package_type_id: packageTypeId,
-        total_credits: packageType.class_credits,
-        remaining_credits: packageType.class_credits,
-        expires_at: expiryDate.toISOString(),
-        status: "active",
-      });
-
-      if (packageError) {
-        console.error("Error creating package:", packageError);
-        return;
-      }
-
-      console.log("Package created successfully");
     }
 
-    // Record transaction
+    // UPSERT transaction record (insert or update based on payment_id)
     const { error: transactionError } = await supabase
       .from("transactions")
-      .insert({
-        user_id: userId,
-        type: "package_purchase",
-        package_type_id: packageTypeId,
-        amount: amount,
-        payment_method: "midtrans",
-        payment_status: paymentStatus,
-        payment_id: orderId,
-        paid_at: transactionStatus === "settlement" ? transactionTime : null,
-      });
+      .upsert(
+        {
+          user_id: userId,
+          type: "package_purchase",
+          package_type_id: packageTypeId,
+          amount: amount,
+          payment_method: "midtrans",
+          payment_status: paymentStatus,
+          payment_id: orderId,
+          location: packageType.location, // Get location from package_types table
+          paid_at:
+            transactionStatus === "settlement" ||
+            transactionStatus === "capture"
+              ? transactionTime
+              : null,
+        },
+        {
+          onConflict: "payment_id",
+          ignoreDuplicates: false, // Update if exists
+        },
+      );
 
     if (transactionError) {
       console.error("Transaction record error:", transactionError);
+    } else {
+      console.log("Transaction record upserted successfully");
     }
   } catch (error) {
     console.error("Error handling package transaction:", error);
@@ -235,22 +261,59 @@ async function handleSingleClassTransaction({
 
     console.log("Bookings updated successfully");
 
-    // Record transaction
+    // Get location from the first booking's class
+    let location: string | null = null;
+    if (bookingIds.length > 0) {
+      const { data: bookingWithClass } = await supabase
+        .from("bookings")
+        .select(
+          `
+          class:class_id (
+            location
+          )
+        `,
+        )
+        .eq("id", bookingIds[0])
+        .single();
+
+      if (bookingWithClass?.class) {
+        // Handle both array and object response
+        const classData = Array.isArray(bookingWithClass.class)
+          ? bookingWithClass.class[0]
+          : bookingWithClass.class;
+        location = classData?.location || null;
+      }
+    }
+
+    // UPSERT transaction record (insert or update based on payment_id)
     const { error: transactionError } = await supabase
       .from("transactions")
-      .insert({
-        user_id: userId,
-        type: "single_class",
-        booking_id: bookingIds[0], // Link to first booking
-        amount: amount,
-        payment_method: "midtrans",
-        payment_status: paymentStatus,
-        payment_id: orderId,
-        paid_at: transactionStatus === "settlement" ? transactionTime : null,
-      });
+      .upsert(
+        {
+          user_id: userId,
+          type: "single_class",
+          booking_id: bookingIds[0], // Link to first booking
+          amount: amount,
+          payment_method: "midtrans",
+          payment_status: paymentStatus,
+          payment_id: orderId,
+          location: location, // Get location from class
+          paid_at:
+            transactionStatus === "settlement" ||
+            transactionStatus === "capture"
+              ? transactionTime
+              : null,
+        },
+        {
+          onConflict: "payment_id",
+          ignoreDuplicates: false, // Update if exists
+        },
+      );
 
     if (transactionError) {
       console.error("Transaction record error:", transactionError);
+    } else {
+      console.log("Transaction record upserted successfully");
     }
   } catch (error) {
     console.error("Error handling single class transaction:", error);
