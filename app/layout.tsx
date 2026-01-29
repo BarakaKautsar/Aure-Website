@@ -12,8 +12,8 @@ const dmSans = DM_Sans({
 export const metadata = {
   title: "Aure Pilates Studio",
   description: "Pilates studio website",
-  verification: {
-    facebook: "4ico95vckr7l0rd6gmc4aabppqkbf4",
+  other: {
+    "facebook-domain-verification": "4ico95vckr7l0rd6gmc4aabppqkbf4",
   },
 };
 
