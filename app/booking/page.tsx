@@ -205,9 +205,9 @@ function BookingPageContent() {
     return true;
   };
 
-  const handleBooking = async () => {
+  const handleBooking = async (skipRulesCheck = false) => {
     // Check if user has agreed to rules
-    if (!hasAgreedToRules) {
+    if (!skipRulesCheck && !hasAgreedToRules) {
       setShowRulesModal(true);
       return;
     }
@@ -814,7 +814,7 @@ function BookingPageContent() {
               </div>
 
               <button
-                onClick={handleBooking}
+                onClick={() => handleBooking()}
                 disabled={
                   processing ||
                   (paymentMethod === "package" && !hasEnoughCredits)
@@ -872,8 +872,8 @@ function BookingPageContent() {
         onAccept={() => {
           setHasAgreedToRules(true);
           setShowRulesModal(false);
-          // Automatically retry booking after rules accepted
-          setTimeout(() => handleBooking(), 100);
+          // Call handleBooking with skipRulesCheck=true to bypass the rules check
+          handleBooking(true);
         }}
       />
     </div>

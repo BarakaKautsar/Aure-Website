@@ -13,7 +13,8 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 
-type Location = "Aure Pilates Studio Tasikmalaya" | "Aure Pilates Studio KBP";
+// Internal keys for the location selector
+type LocationKey = "tasikmalaya" | "kbp";
 
 type ParsedClass = {
   date: string;
@@ -47,16 +48,20 @@ type SyncResult = {
 };
 
 const LOCATIONS = {
-  "Aure Pilates Studio Tasikmalaya": {
+  tasikmalaya: {
     name: "Tasikmalaya",
+    fullName: "Aure Pilates Studio Tasikmalaya", // Used for API/Google Sheets lookup
+    dbLocation: "Tasikmalaya", // Stored in database
     sheetId:
       process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID_TASIKMALAYA ||
       process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID,
     color: "from-blue-500 to-blue-600",
     icon: "🏢",
   },
-  "Aure Pilates Studio KBP": {
+  kbp: {
     name: "KBP",
+    fullName: "Aure Pilates Studio KBP", // Used for API/Google Sheets lookup
+    dbLocation: "KBP", // Stored in database
     sheetId: process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID_KBP,
     color: "from-purple-500 to-purple-600",
     icon: "🏛️",
@@ -64,8 +69,8 @@ const LOCATIONS = {
 } as const;
 
 export default function SyncSchedulePage() {
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(
-    null
+  const [selectedLocation, setSelectedLocation] = useState<LocationKey | null>(
+    null,
   );
   const [syncing, setSyncing] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -89,7 +94,7 @@ export default function SyncSchedulePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          location: selectedLocation,
+          location: locationConfig.fullName, // Send full name to API for Google Sheets
           sheetId: locationConfig.sheetId,
         }),
       });
@@ -106,20 +111,34 @@ export default function SyncSchedulePage() {
           alert(`Sync failed: ${errorMsg}\n\nCheck console for details.`);
         } catch (e) {
           alert(
-            `Sync failed with status ${response.status}\n\nResponse: ${errorText}`
+            `Sync failed with status ${response.status}\n\nResponse: ${errorText}`,
           );
         }
         return;
       }
 
       const result = await response.json();
-      setSyncResult(result);
+
+      // Transform the location in the result to use simplified names
+      const transformedClasses = result.classes.map((cls: ParsedClass) => ({
+        ...cls,
+        location: locationConfig.dbLocation, // Use simplified location name
+      }));
+
+      setSyncResult({
+        ...result,
+        classes: transformedClasses,
+        config: {
+          ...result.config,
+          location: locationConfig.dbLocation,
+        },
+      });
     } catch (error) {
       console.error("Sync error:", error);
       alert(
         `Failed to sync: ${
           error instanceof Error ? error.message : "Unknown error"
-        }. Check browser console for details.`
+        }. Check browser console for details.`,
       );
     } finally {
       setSyncing(false);
@@ -127,11 +146,13 @@ export default function SyncSchedulePage() {
   };
 
   const importClasses = async () => {
-    if (!syncResult) return;
+    if (!syncResult || !selectedLocation) return;
 
     setImporting(true);
     let successCount = 0;
     let failedCount = 0;
+
+    const locationConfig = LOCATIONS[selectedLocation];
 
     try {
       // Insert classes in batches
@@ -142,7 +163,7 @@ export default function SyncSchedulePage() {
           title: classData.title,
           class_type: classData.class_type,
           coach_id: classData.coach_id,
-          location: classData.location,
+          location: locationConfig.dbLocation, // Use simplified location name
           capacity: classData.capacity,
           price: classData.price,
           original_price: classData.original_price,
@@ -195,16 +216,16 @@ export default function SyncSchedulePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
           {(
             Object.entries(LOCATIONS) as [
-              Location,
-              (typeof LOCATIONS)[Location]
+              LocationKey,
+              (typeof LOCATIONS)[LocationKey],
             ][]
-          ).map(([location, config]) => {
+          ).map(([locationKey, config]) => {
             const isConfigured = !!config.sheetId;
 
             return (
               <button
-                key={location}
-                onClick={() => isConfigured && setSelectedLocation(location)}
+                key={locationKey}
+                onClick={() => isConfigured && setSelectedLocation(locationKey)}
                 disabled={!isConfigured}
                 className={`group relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 ${
                   isConfigured
@@ -234,7 +255,9 @@ export default function SyncSchedulePage() {
                   </div>
 
                   <h3 className="text-2xl font-bold mb-2">{config.name}</h3>
-                  <p className="text-white/90 text-sm mb-4">{location}</p>
+                  <p className="text-white/90 text-sm mb-4">
+                    {config.fullName}
+                  </p>
 
                   {isConfigured && (
                     <div className="flex items-center gap-2 text-sm text-white/80">
@@ -338,7 +361,7 @@ export default function SyncSchedulePage() {
               </h1>
             </div>
             <p className="text-gray-600">
-              Import classes from Google Sheets for {selectedLocation}
+              Import classes from Google Sheets for {locationConfig.fullName}
             </p>
           </div>
         </div>
@@ -426,7 +449,7 @@ export default function SyncSchedulePage() {
                 <span className="text-blue-600 mt-0.5">•</span>
                 <span>
                   All classes will be tagged with location:{" "}
-                  <strong>{selectedLocation}</strong>
+                  <strong>{locationConfig.dbLocation}</strong>
                 </span>
               </li>
             </ul>
@@ -452,7 +475,7 @@ export default function SyncSchedulePage() {
                   Sheet shared with service account (
                   {
                     process.env.NEXT_PUBLIC_GOOGLE_SERVICE_ACCOUNT_EMAIL?.split(
-                      "@"
+                      "@",
                     )[0]
                   }
                   ...)
@@ -479,7 +502,7 @@ export default function SyncSchedulePage() {
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-gray-600 mb-1">Location</p>
                 <p className="font-semibold text-gray-900">
-                  {locationConfig.name}
+                  {locationConfig.dbLocation}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
@@ -491,7 +514,7 @@ export default function SyncSchedulePage() {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
-                    }
+                    },
                   )}
                 </p>
               </div>
@@ -504,7 +527,7 @@ export default function SyncSchedulePage() {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
-                    }
+                    },
                   )}
                 </p>
               </div>
@@ -544,24 +567,6 @@ export default function SyncSchedulePage() {
                   ))}
                 </div>
               </div>
-
-              {/* <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Sample Dates (First 14 classes):
-                </p>
-                <div className="bg-white p-4 rounded-lg text-xs font-mono max-h-40 overflow-y-auto">
-                  {syncResult.debug.sampleDates.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="mb-1 py-1 border-b border-gray-100 last:border-0"
-                    >
-                      <span className="text-blue-600">{item.date}</span>{" "}
-                      <span className="text-gray-500">({item.dayOfWeek})</span>{" "}
-                      - <span className="text-gray-900">{item.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div> */}
             </div>
           )}
 
@@ -640,6 +645,9 @@ export default function SyncSchedulePage() {
                       Coach
                     </th>
                     <th className="text-left px-4 py-3 border-b-2 border-gray-200 font-semibold text-gray-700">
+                      Location
+                    </th>
+                    <th className="text-left px-4 py-3 border-b-2 border-gray-200 font-semibold text-gray-700">
                       Capacity
                     </th>
                     <th className="text-left px-4 py-3 border-b-2 border-gray-200 font-semibold text-gray-700">
@@ -670,6 +678,17 @@ export default function SyncSchedulePage() {
                       </td>
                       <td className="px-4 py-3 text-gray-700">
                         {cls.coach_name}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            cls.location === "KBP"
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-teal-100 text-teal-700"
+                          }`}
+                        >
+                          {cls.location}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-center font-semibold text-gray-900">
                         {cls.capacity}
@@ -710,7 +729,7 @@ export default function SyncSchedulePage() {
           </h2>
           <p className="text-gray-600 text-lg mb-2">
             Successfully imported <strong>{importStats.success}</strong> classes
-            to <strong>{locationConfig.name}</strong>
+            to <strong>{locationConfig.dbLocation}</strong>
           </p>
           {importStats.failed > 0 && (
             <p className="text-red-600 mb-6">({importStats.failed} failed)</p>

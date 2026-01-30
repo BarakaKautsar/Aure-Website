@@ -5,10 +5,7 @@ import WaitlistModal, { WaitlistSuccessModal } from "./WaitlistModal";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 
-const LOCATIONS = [
-  "Aure Pilates Studio Tasikmalaya",
-  "Aure Pilates Studio KBP",
-];
+const LOCATIONS = ["Tasikmalaya", "KBP"];
 
 type ClassFromDB = {
   id: string;
@@ -55,7 +52,7 @@ export default function ScheduleSection() {
   });
 
   const [filters, setFilters] = useState({
-    location: "Aure Pilates Studio Tasikmalaya",
+    location: "Tasikmalaya",
     classType: "",
     coach: "",
   });
@@ -361,7 +358,7 @@ export default function ScheduleSection() {
               <span>
                 {filters.location === "All Locations"
                   ? t.schedule.allLocations
-                  : filters.location.replace("Aure Pilates Studio ", "")}
+                  : filters.location}
               </span>
               <svg
                 className="w-4 h-4"
@@ -404,7 +401,7 @@ export default function ScheduleSection() {
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                 >
-                  {loc.replace("Aure Pilates Studio ", "")}
+                  {loc}
                 </button>
               ))}
             </div>
@@ -553,11 +550,11 @@ export default function ScheduleSection() {
           {/* Clear Filters Button */}
           {(filters.classType ||
             filters.coach ||
-            filters.location !== "Aure Pilates Studio Tasikmalaya") && (
+            filters.location !== "Tasikmalaya") && (
             <button
               onClick={() =>
                 setFilters({
-                  location: "Aure Pilates Studio Tasikmalaya",
+                  location: "Tasikmalaya",
                   classType: "",
                   coach: "",
                 })
@@ -653,7 +650,7 @@ export default function ScheduleSection() {
                           hasStarted ? "text-gray-400" : "text-[#2E3A4A]"
                         }`}
                       >
-                        {item.location.replace("Aure Pilates Studio ", "")}
+                        {item.location}
                       </p>
                       <p
                         className={`text-xs ${
