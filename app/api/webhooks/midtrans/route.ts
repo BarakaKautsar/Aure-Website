@@ -105,6 +105,61 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Helper function to upsert transaction manually (works with partial unique index)
+async function upsertTransaction(paymentId: string, transactionData: {
+  user_id: string;
+  type: string;
+  package_type_id?: string | null;
+  booking_id?: string | null;
+  amount: number;
+  payment_method: string;
+  payment_status: string;
+  payment_id: string;
+  location: string | null;
+  paid_at: string | null;
+}) {
+  // Check if transaction with this payment_id already exists
+  const { data: existing, error: selectError } = await supabase
+    .from("transactions")
+    .select("id")
+    .eq("payment_id", paymentId)
+    .maybeSingle();
+
+  if (selectError) {
+    console.error("Error checking existing transaction:", selectError);
+    throw selectError;
+  }
+
+  if (existing) {
+    // Update existing record
+    const { error: updateError } = await supabase
+      .from("transactions")
+      .update({
+        payment_status: transactionData.payment_status,
+        paid_at: transactionData.paid_at,
+        location: transactionData.location,
+      })
+      .eq("id", existing.id);
+
+    if (updateError) {
+      console.error("Error updating transaction:", updateError);
+      throw updateError;
+    }
+    console.log("Transaction updated successfully (id:", existing.id, ")");
+  } else {
+    // Insert new record
+    const { error: insertError } = await supabase
+      .from("transactions")
+      .insert(transactionData);
+
+    if (insertError) {
+      console.error("Error inserting transaction:", insertError);
+      throw insertError;
+    }
+    console.log("Transaction inserted successfully");
+  }
+}
+
 async function handlePackageTransaction({
   orderId,
   userId,
@@ -153,7 +208,7 @@ async function handlePackageTransaction({
         .eq("user_id", userId)
         .eq("package_type_id", packageTypeId)
         .gte("created_at", new Date(Date.now() - 60000).toISOString()) // Created within last minute
-        .single();
+        .maybeSingle();
 
       if (!existingPackage) {
         // Calculate expiry date
@@ -182,36 +237,23 @@ async function handlePackageTransaction({
       }
     }
 
-    // UPSERT transaction record (insert or update based on payment_id)
-    const { error: transactionError } = await supabase
-      .from("transactions")
-      .upsert(
-        {
-          user_id: userId,
-          type: "package_purchase",
-          package_type_id: packageTypeId,
-          amount: amount,
-          payment_method: "midtrans",
-          payment_status: paymentStatus,
-          payment_id: orderId,
-          location: packageType.location, // Get location from package_types table
-          paid_at:
-            transactionStatus === "settlement" ||
-            transactionStatus === "capture"
-              ? transactionTime
-              : null,
-        },
-        {
-          onConflict: "payment_id",
-          ignoreDuplicates: false, // Update if exists
-        },
-      );
+    // Upsert transaction record using manual insert/update
+    await upsertTransaction(orderId, {
+      user_id: userId,
+      type: "package_purchase",
+      package_type_id: packageTypeId,
+      booking_id: null,
+      amount: amount,
+      payment_method: "midtrans",
+      payment_status: paymentStatus,
+      payment_id: orderId,
+      location: packageType.location,
+      paid_at:
+        transactionStatus === "settlement" || transactionStatus === "capture"
+          ? transactionTime
+          : null,
+    });
 
-    if (transactionError) {
-      console.error("Transaction record error:", transactionError);
-    } else {
-      console.log("Transaction record upserted successfully");
-    }
   } catch (error) {
     console.error("Error handling package transaction:", error);
   }
@@ -285,36 +327,23 @@ async function handleSingleClassTransaction({
       }
     }
 
-    // UPSERT transaction record (insert or update based on payment_id)
-    const { error: transactionError } = await supabase
-      .from("transactions")
-      .upsert(
-        {
-          user_id: userId,
-          type: "single_class",
-          booking_id: bookingIds[0], // Link to first booking
-          amount: amount,
-          payment_method: "midtrans",
-          payment_status: paymentStatus,
-          payment_id: orderId,
-          location: location, // Get location from class
-          paid_at:
-            transactionStatus === "settlement" ||
-            transactionStatus === "capture"
-              ? transactionTime
-              : null,
-        },
-        {
-          onConflict: "payment_id",
-          ignoreDuplicates: false, // Update if exists
-        },
-      );
+    // Upsert transaction record using manual insert/update
+    await upsertTransaction(orderId, {
+      user_id: userId,
+      type: "single_class",
+      package_type_id: null,
+      booking_id: bookingIds[0],
+      amount: amount,
+      payment_method: "midtrans",
+      payment_status: paymentStatus,
+      payment_id: orderId,
+      location: location,
+      paid_at:
+        transactionStatus === "settlement" || transactionStatus === "capture"
+          ? transactionTime
+          : null,
+    });
 
-    if (transactionError) {
-      console.error("Transaction record error:", transactionError);
-    } else {
-      console.log("Transaction record upserted successfully");
-    }
   } catch (error) {
     console.error("Error handling single class transaction:", error);
   }
