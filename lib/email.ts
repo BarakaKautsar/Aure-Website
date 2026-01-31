@@ -372,3 +372,92 @@ export async function sendWelcomeEmail({
     return { success: false, error };
   }
 }
+
+export async function sendPasswordResetEmail({
+  to,
+  userName,
+  resetToken,
+}: {
+  to: string;
+  userName: string;
+  resetToken: string;
+}) {
+  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #2E3A4A; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+          .card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .button { display: inline-block; background: #2E3A4A; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+          .warning { background: #FEF3C7; padding: 15px; border-left: 4px solid #F59E0B; margin: 20px 0; border-radius: 4px; }
+          .footer { text-align: center; padding: 20px; color: #666; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔐 Reset Password</h1>
+          </div>
+          <div class="content">
+            <p>Halo <strong>${userName}</strong>,</p>
+            <p>Kami menerima permintaan untuk mereset password akun Anda di Aure Pilates Studio.</p>
+            
+            <div class="card">
+              <p>Klik tombol di bawah ini untuk membuat password baru:</p>
+              <center>
+                <a href="${resetUrl}" class="button">
+                  Reset Password
+                </a>
+              </center>
+              <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                Atau salin link ini ke browser Anda:<br>
+                <a href="${resetUrl}" style="color: #2E3A4A; word-break: break-all;">${resetUrl}</a>
+              </p>
+            </div>
+
+            <div class="warning">
+              <strong>⚠️ Penting:</strong>
+              <ul style="margin: 10px 0;">
+                <li>Link ini akan kadaluarsa dalam <strong>1 jam</strong></li>
+                <li>Jika Anda tidak meminta reset password, abaikan email ini</li>
+                <li>Jangan bagikan link ini kepada siapa pun</li>
+              </ul>
+            </div>
+
+            <p>Jika Anda mengalami kesulitan, hubungi kami di WhatsApp: <strong>+62 813-7025-1119</strong></p>
+          </div>
+          <div class="footer">
+            <p>Aure Pilates Studio Tasikmalaya</p>
+            <p>Jl. Sutisna Senjaya No.57, Empangsari</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: "🔐 Reset Password - Aure Pilates",
+      html,
+    });
+
+    if (error) {
+      console.error("Error sending password reset email:", error);
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return { success: false, error };
+  }
+}

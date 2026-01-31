@@ -3,23 +3,42 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent">("idle");
+  const [error, setError] = useState<string | null>(null);
   const { t } = useLanguage();
 
   const inputBase =
     "w-full border border-[#D1D5DB] rounded-xl px-4 py-3 bg-white text-[#2F3E55] focus:outline-none focus:ring-2 focus:ring-[#B7C9E5]";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
+    setError(null);
 
-    // Fake email send – replace with Supabase later
-    setTimeout(() => {
+    try {
+      // Supabase automatically sends password reset email
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      );
+
+      if (resetError) {
+        setError(resetError.message);
+        setStatus("idle");
+        return;
+      }
+
       setStatus("sent");
-    }, 1000);
+    } catch (err) {
+      setError("Terjadi kesalahan. Silakan coba lagi.");
+      setStatus("idle");
+    }
   };
 
   return (
